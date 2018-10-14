@@ -4,6 +4,7 @@ type token =
     | ID of string
     | Numeral of string
     | Int
+    | Float
     | Matrix
     | LeftParens
     | RightParens
@@ -73,12 +74,11 @@ let scan_keyword_or_id st =
       | "case" -> Case
       | "break" -> Break
       | "continue" -> Continue
+      | "float" -> Float
       | s -> ID s
 
 (* assuming the next token is a numeral, get it *)
 let scan_numeral st = Numeral (read_until_special_char st)
-
-
 
 (* scan the stream and get the next token *)
 let rec scan st =
@@ -119,23 +119,23 @@ let rec scan st =
                         Some '=' -> ignore (next st); Geq
                       | _ -> Greater
                     end
-             | '<' ->
+              | '<' ->
                     begin match peek st with
                         Some '=' -> ignore (next st); Leq
                       | _ -> Less
                     end
-             | ';' -> Semicolon
-             | x -> raise @@ ImpossibleChar x
+              | ';' -> Semicolon
+              | x -> raise @@ ImpossibleChar x
 
 
+(* returns all tokens from a stream *)
 let rec tokenize st =
     let token = scan st in
     match token with
         EOF -> []
       | token -> token :: tokenize st
 
+(* tokenize a file *)
 let tokenize_file filename =
     let st = Stream.of_channel @@ open_in filename in
     tokenize st
-
-let tokens_test = tokenize_file "tokenizer1.cst"

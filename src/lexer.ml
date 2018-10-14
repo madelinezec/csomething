@@ -3,7 +3,6 @@ open Stream
 type token =
     | ID of string
     | Numeral of string
-    | Float of float
     | Int
     | Matrix
     | LeftParens
@@ -12,6 +11,19 @@ type token =
     | RightBrace
     | LeftBracket
     | RightBracket
+    | Plus
+    | Increment
+    | Decrement
+    | Minus
+    | Multiply
+    | Divide
+    | Mod
+    | Greater
+    | Less
+    | Equality
+    | Assignment 
+    | Leq
+    | Geq
     | Semicolon
     | If
     | Else
@@ -23,6 +35,9 @@ type token =
     | Break
     | Continue
     | EOF
+    | Invalid
+
+exception ImpossibleChar of char
 
 (* character *)
 let is_digit c = let code = Char.code c in
@@ -31,29 +46,96 @@ let is_digit c = let code = Char.code c in
 let is_alpha c = let code = Char.code c in
                  (code >= Char.code('A') && code <= Char.code('Z')) ||
                  (code >= Char.code('a') && code <= Char.code('z'))
-           
 
+let is_space c = c = ' ' || c = '\t' || c = '\r' || c = '\n'
+
+(* read until the next is not a letter or number *)
 let rec read_until_special_char st = let c = peek st in
     match c with
         Some c -> 
             if not (is_alpha c) && (not (is_digit c)) then
                 ""
             else
-                String.make 1 c ^ read_until_special_char st
+                (ignore @@ next st; String.make 1 c ^ read_until_special_char st)
       | None -> ""
 
-(* assuming the next token is an identifier, get it *)
-let scan_id st = ID (read_until_special_char st) 
+let scan_keyword_or_id st =
+    let str = read_until_special_char st in
+    match str with
+        "int" -> Int
+      | "mat" -> Matrix
+      | "if" -> If
+      | "else" -> Else
+      | "while" -> While
+      | "do" -> Do
+      | "for" -> For
+      | "switch" -> Switch
+      | "case" -> Case
+      | "break" -> Break
+      | "continue" -> Continue
+      | s -> ID s
 
 (* assuming the next token is a numeral, get it *)
-
 let scan_numeral st = Numeral (read_until_special_char st)
 
+
+
 (* scan the stream and get the next token *)
-let scan st = let c = peek st in
+let rec scan st =
+    let c = peek st in
     match c with 
         None -> EOF
       | Some c ->
-            if is_alpha c then scan_id st
+            if is_space c then (ignore @@ next st; scan st)
+            else if is_alpha c then scan_keyword_or_id st
             else if is_digit c then scan_numeral st
-            else EOF
+            else match next st with
+                '(' -> LeftParens
+              | ')' -> RightParens
+              | '[' -> LeftBracket
+              | ']' -> RightBracket
+              | '{' -> LeftBrace
+              | '}' -> RightBrace
+              | '+' ->
+                    begin match peek st with
+                        Some '+' -> ignore (next st); Increment
+                      | _ -> Plus
+                    end
+              | '-' ->
+                    begin match peek st with
+                        Some '+' -> ignore (next st); Decrement
+                      | _ -> Minus
+                    end
+              | '*' -> Multiply
+              | '/' -> Divide
+              | '%' -> Mod
+              | '=' ->
+                    begin match peek st with
+                        Some '=' -> ignore (next st); Equality
+                      | _ -> Assignment
+                    end
+              | '>' ->
+                    begin match peek st with
+                        Some '=' -> ignore (next st); Geq
+                      | _ -> Greater
+                    end
+             | '<' ->
+                    begin match peek st with
+                        Some '=' -> ignore (next st); Leq
+                      | _ -> Less
+                    end
+             | ';' -> Semicolon
+             | x -> raise @@ ImpossibleChar x
+
+
+let rec tokenize st =
+    let token = scan st in
+    match token with
+        EOF -> []
+      | token -> token :: tokenize st
+
+let tokenize_file filename =
+    let st = Stream.of_channel @@ open_in filename in
+    tokenize st
+
+let tokens_test = tokenize_file "tokenizer1.cst"

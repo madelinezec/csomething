@@ -3,13 +3,17 @@ PLT FALL 2018
 
 
 C Something?
+
 Project Proposal
 
 
-Tong Liu (tl2871) Compiler Architect
-Zhuohao Li (zl2630) Language Guru
-Zixiong Liu (zl2683) System Architect
-Madeline Zechar (mez2113)  Manager
+Tong Liu (tl2871) Compiler Architect 
+
+Zhuohao Li (zl2630) Language Guru 
+
+Zixiong Liu (zl2683) System Architect 
+
+Madeline Zechar (mez2113)  Manager 
 
 
 

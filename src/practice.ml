@@ -1,5 +1,3 @@
-
-
 let parseProgram tokenlist = 
     
     match tokenlist.head with 
@@ -331,86 +329,55 @@ let parseExprPrime tokenlist =
 
 
 
+let parseActualsOpt tokenlist = 
+  match tokenlist.head with
+  | "LITERAL" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("LITERAL", actuals_list))
+  | "TRUE" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("TRUE", actuals_list))
+  | "FALSE" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("FALSE", actuals_list))
+  | "ID" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("ID", actuals_list))
+  | "MINUS" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("MINUS", actuals_list))
+  | "NOT" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("NOT", actuals_list))
+  | "LPAREN" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("LPAREN", actuals_list))
+  | "RPAREN" -> expr2
+  | _ -> raise error
 
+let parseActualsList tokenlist = 
+  match value with
+  | patt -> expr
+  | "LITERAL" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+  | "TRUE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("TRUE", expr, actuals_list_prime))
+  | "FALSE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("FALSE", expr, actuals_list_prime))
+  | "ID" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("ID", expr, actuals_list_prime))
+  | "MINUS" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("MINUS", expr, actuals_list_prime))
+  | "NOT" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("NOT", expr, actuals_list_prime))
+  | "LPAREN" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("LPAREN", expr, actuals_list_prime))
+  | _ -> raise error
 
-let main token_list = 
-  let parse_table = Hashtbl.create 123456 in
-    Hashtbl.add pase_table ("INT", "program") ["decls", "EOF"]
-    Hashtbl.add pase_table ("INT", "decls") ["typ, "ID", "decls_prime"]
-    Hashtbl.add pase_table ("INT", "formals_opt") ["formal_list"]
-    Hashtbl.add pase_table ("INT", "formal_list") ["typ", "ID", "formal_list_prime"]
-    Hashtbl.add pase_table ("INT", "typ") ["INT"]
+let rec parseActualsListPrime tokenlist = 
+  match tokenlist.head with
+  | "COMMA" -> let expr tokenlist_expr = next tokenlist |> parseExpr in
+                let actuals_list_prime tokenlist_actuals_prime = next tokenlist_expr |> parseExpr in
+                (tokenlist_actuals_prime, Ast.ActualsListPrime("COMMA", expr, actuals_list_prime))
+  | "RPAREN" -> (tokenlist, [])
+  | _ -> raise error
 
-    Hashtbl.add pase_table ("BOOL", "program") ["decls", "EOF"]
-    Hashtbl.add pase_table ("BOOL", "decls") ["typ", "id", "decls_prime"]
-    Hashtbl.add pase_table ("BOOL", "formals_opt") ["formal_list"]
-    Hashtbl.add pase_table ("BOOL", "formals_list") ["typ", "ID", "formal_list_prime"]
-    Hashtbl.add pase_table ("BOOL", "formals_list_prime") ["BOOL"]
-    Hashtbl.add pase_table ("BOOL", "typ") ["BOOL"]
-    Hashtbl.add pase_table ("VOID", "program") ["decls", "EOF"]
-    Hashtbl.add pase_table ("VOID", "decls") ["typ", "ID", "decls_prime"]
-    Hashtbl.add pase_table ("VOID", "formals_opt") ["formal_list", "EOF"]
-    Hashtbl.add pase_table ("VOID", "formals_list") ["typ", "ID", "formal_list_prime"]
-    Hashtbl.add pase_table ("VOID", "typ") ["VOID"]
-
-    Hashtbl.add pase_table ("EOF", "program") ["decls", "EOF"]
-    Hashtbl.add pase_table ("EOF", "decls") ["epsilon"]
-    Hashtbl.add pase_table ("SEMI", "decls_prime") ["vdecl", "decls"]
-    Hashtbl.add pase_table ("SEMI", "vdecl_list") ["vdecl", "vdecl_list"]
-    Hashtbl.add pase_table ("SEMI", "vdecl") ["SEMI"]
-    Hashtbl.add pase_table ("SEMI", "stmt_list") ["stmt", "stmt_list"]
-    Hashtbl.add pase_table ("SEMI", "stmt") ["expr", "SEMI"]
-    Hashtbl.add pase_table ("SEMI", "stmt_prime") ["SEMI"]
-    Hashtbl.add pase_table ("SEMI", "expr_opt") ["epsilon"]
-    Hashtbl.add pase_table ("SEMI", "expr_prim") ["epsilon"]
-        
-    Hashtbl.add pase_table ("LPAREN", "decls_prime") ["fdecl", "decls"]
-    Hashtbl.add pase_table ("LPAREN", "fdecl") ["LPAREN", "formals_opt", "RPAREN", "LBRACE", "vdecl_list", "stmt_list", "RBRACE"]
-    Hashtbl.add pase_table ("LPAREN", "vdecl_list") ["epsilon"]
-    Hashtbl.add pase_table ("LPAREN", "stmt_list") ["stmt", "stmt_list"]
-    Hashtbl.add pase_table ("LPAREN", "stmt") ["expr", "SEMI"]
-    Hashtbl.add pase_table ("LPAREN", "stmt_prime") ["expr", "SEMI"]
-    Hashtbl.add pase_table ("LPAREN", "expr_opt") ["expr"]
-    Hashtbl.add pase_table ("LPAREN", "expr_prime") ["LPAREN", "actuals_opt", "RPAREN"]
-    Hashtbl.add pase_table ("LPAREN", "actuals_opt") ["actuals_list"]
-    Hashtbl.add pase_table ("LPAREN", "actuals_list") ["expr", "actuals_list_prime"]
-
-
-    Hashtbl.add pase_table ("RPAREN", "formals_opt") ["epsilon"]
-    Hashtbl.add pase_table ("RPAREN", "formals_list_prime") ["epsilon"]
-    Hashtbl.add pase_table ("RPAREN", "expr_opt") ["epsilon"]
-    Hashtbl.add pase_table ("RPAREN", "expr_prime") ["epsilon"]
-    Hashtbl.add pase_table ("RPAREN", "actuals_opt") ["epsilon"]
-    Hashtbl.add pase_table ("RPAREN", "actuals_list_prime") ["epsilon"]
-
-    Hashtbl.add pase_table ("COMMA", "formal_list_prime") ["COMMA", "formal_list"]
-    Hashtbl.add pase_table ("COMMA", "expr_prime") ["epsilon"]
-    Hashtbl.add pase_table ("COMMA", "actuals_list_prime") ["COMMA", "expr", "actuals_list_prime"]
-
-    Hashtbl.add pase_table ("RETURN", "vdecl_list") ["epsilon"]
-    Hashtbl.add pase_table ("RETURN", "stmt_list") ["stmt", "stmt_list"]
-    Hashtbl.add pase_table ("RETURN", "stmt") ["RETURN", "stmt_prime"]
-
-    
-    Hashtbl.add pase_table ("LBRACE", "vdecl_list") ["epsilon"]
-    Hashtbl.add pase_table ("LBRACE", "stmt_list") ["stmt", "stmt_list"]
-    Hashtbl.add pase_table ("LBRACE", "stmt_list") ["LBRACE", "stmt_list", "RBRACE"]
-
-    Hashtbl.add pase_table ("RBRACE", "vdecl_list") ["epsilon"]
-
-    Hashtbl.add pase_table ("IF", "vdecl_list") ["epsilon"]
-    Hashtbl.add pase_table ("IF", "stmt_list") ["stmt", "stmt_list"]
-    Hashtbl.add pase_table ("IF", "stmt") ["IF", "LPAREN", "expr", "RPAREN", "stmt", "stmt_prime_prime"]
-
-
-    Hashtbl.add pase_table ("FOR", "vdecl_list") ["epsilon"]
-    Hashtbl.add pase_table ("FOR", "stmt_list") ["stmt", "stmt_list"]
-    Hashtbl.add pase_table ("FOR", "stmt") ["FOR", "LPAREN", "expr_opt", "SEMI", "expr", "SEMI", "expr_opt", "RPAREN", "stmt"]
-
-    Hashtbl.add pase_table ("WHILE", "vdecl_list") ["epsilon"]
-    Hashtbl.add pase_table ("WHILE", "stmt_list") ["stmt", "stmt_list"]
-    Hashtbl.add pase_table ("WHILE", "stmt") ["WHILE", "LPAREN", "expr", "RPAREN", "stmt"]
-
-    Hashtbl.add pase_table ("LITERAL", "vdecl_list") ["epsilon"]
-    Hashtbl.add pase_table ("LITERAL", "stmt_list") ["stmt", "stmt_list"]
-    Hashtbl.add pase_table ("LITERAL", "stmt") ["expr", "SEMI"]

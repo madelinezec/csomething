@@ -1,127 +1,383 @@
-(** Parser.
-    A [Parser] is a LL(1), top-down recursive descent parser for PL/0 language. 
-    https://en.wikipedia.org/wiki/PL/0. *)
-open Lexer
-open Ast
+let parseProgram tokenlist = 
+    
+    match tokenlist.head with 
+    | "INT" -> let decls tokenlist_decls = parseDecls tokenlist in 
+               let EOF tokenlist_EOF = parseEOF tokenlist_decls in (, Ast.Program(decls, EOF)
+    | "BOOL" -> let decls tokenlist_decls = parseDecls tokenlist in 
+               let EOF tokenlist_EOF = parseEOF tokenlist_decls in Ast.Program(decls, EOF)
+    | "VOID" -> let decls tokenlist_decls = parseDecls tokenlist in 
+               let EOF tokenlist_EOF = parseEOF tokenlist_decls in Ast.Program(decls, EOF)
+    | "EOF" -> let decls tokenlist_decls = parseDecls tokenlist in 
+               let EOF tokenlist_EOF = parseEOF tokenlist_decls in Ast.Program(decls, EOF)
 
-exception Syntax_error of string 
-(** Raised when [!Parser] encounters an unrecongnized token. *)
+let parseDecls tokenlist = 
+    match tokenlist.head with 
+    | "INT" -> match tokenlist.head with 
+               | "ID" -> let decls_prime tokenlist_decls_prime = parseDeclsPrime tokenlist_typ.next in (tokenlist_decls_prime, Ast.Decls("INT", "ID", decls_prime)
+               | _ -> raise error
+    | "BOOL" -> match tokenlist.head with 
+               | "ID" -> let decls_prime tokenlist_decls_prime = parseDeclsPrime tokenlist_typ.next in (tokenlist_decls_prime, Ast.Decls("BOOL", "ID", decls_prime)
+               | _ -> raise error
+    | "INT" -> match tokenlist.head with 
+               | "ID" -> let decls_prime tokenlist_decls_prime = parseDeclsPrime tokenlist_typ.next in (tokenlist_decls_prime, Ast.Decls("VOID", "ID", decls_prime)
+               | _ -> raise error
+    | "EOF" -> (tokenlist, parseTree)
+    | _-> raise error
 
-type token_list = 
-  {lookahead : Lexer.token; (** look-ahead token. *)
-   lexbuf : Lexing.lexbuf}  (** lexer buffer. *)
-(** Represents a parser buffer used during parsing of various productions. *)
+let parseDeclsPrime tokenlist =
+    match tokenlist.head with 
+    | "SEMI" -> let vdecl tokenlist_vdecl = parseVdecl tokenlist.next in 
+                let decls tokenlist_decls = parseDecls tokenlist_vdecl in 
+                (tokenlist_decls, Ast.DeclsPrime("SEMI", vdecl, decls)) 
+    | "LPAREN" -> let fdecl tokenlist_fdecl = parseFdecl tokenlist.next in 
+                let decls tokenlist_decls = parseDecls tokenlist_fdecl in 
+                (tokenlist_decls, Ast.DeclsPrime("SEMI", fdecl, decls)) 
+    | _-> raise error
 
-let default_tokenlist s = {lookahead = Lexer.Eof; lexbuf = Lexing.from_string s}
-(** Create a default [token_list] with the given string [s]. *)
+let parseFdecl tokenlist = 
+    match tokenlist.head with 
+    | "LPAREN" -> let formals_opt tokenlist_formals = parseFormals tokenlist.next in 
+                  match tokenlist_formals.head with 
+                  | "RPAREN" -> match tokenlist_formals.next with 
+                                | "LBRACE" -> let vdecl_list tokenlist_vdecl_list = parseVdeclList tokenlist_formals.next in 
+                                              let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_vdecl_list in 
+                                              match tokenlist_stmt_list.head with 
+                                              | "RBRACE" -> (tokenlist_stmt_list.next, Ast(something something))
+                                              | _-> raise error
+                                | _-> raise error
+                  | _-> raise error
+    | _-> raise error
 
-let next tokenlist = {pb with lookahead = Lexer.next_token pb.lexbuf}
-(** Retrieves a new parser buffer with the next lookahead token. *)
+let parseFormalsOpt tokenlist = 
+    match tokenlist.head with 
+    | "INT" -> let formal_list tokenlist_formal_list = parseFormalList tokenlist.next in (tokenlist_formal_list, Ast("INT", formal_list))
+    | "BOOL" -> let formal_list tokenlist_formal_list = parseFormalList tokenlist.next in (tokenlist_formal_list, Ast("BOOL", formal_list))
+    | "VOID" -> let formal_list tokenlist_formal_list = parseFormalList tokenlist.next in (tokenlist_formal_list, Ast("VOID", formal_list))
+    | "RPAREN" -> (tokenlist, Ast.Rparen)
+    | _-> raise error
 
-let expect_error tokenlist t fname =
-  let la_str = Lexer.to_string tokenlist.lookahead and e_str = Lexer.to_string t in
-  let err_msg = Printf.sprintf "Syntax Error. Expected token '%s', however received '%s' in %s().\n" e_str la_str fname in 
-  let e = Syntax_error err_msg in
-  raise e
+let parseFormalList tokenlist = 
+    match tokenlist.head with 
+    | "INT" -> match tokenlist.next with 
+               | "ID" -> let tokenlist_typ = next tokenlist |> next in 
+                         let formal_list_prime tokenlist_formal_list_prime = parseFormalListPrime tokenlist_typ in (tokenlist_formal_list_prime, Ast.Decls("INT", "ID", decls_prime)
+               | _ -> raise error
+    | "BOOL" -> match tokenlist.next with 
+               | "ID" -> let tokenlist_typ = next tokenlist |> next in 
+                         let formal_list_prime tokenlist_formal_list_prime = parseFormalListPrime tokenlist_typ in (tokenlist_formal_list_prime, Ast.Decls("BOOL", "ID", decls_prime)
+               | _ -> raise error
+    | "VOID" -> match tokenlist.next with 
+               | "ID" -> let tokenlist_typ = next tokenlist |> next in 
+                         let formal_list_prime tokenlist_formal_list_prime = parseFormalListPrime tokenlist_typ in (tokenlist_formal_list_prime, Ast.Decls("VOID", "ID", decls_prime)
+               | _ -> raise error
+    | _-> raise error
 
-(** Throws [Parse_error]. *)
-let error tokenlist fname =
-  let la_str = Lexer.to_string tokenlist.lookahead in 
-  let err_msg = Printf.sprintf "Syntax Error. Unexpected token '%s'\n" la_str in
-  let e = Syntax_error err_msg in
-  raise e            
+let rec parseVdeclList tokenlist = 
+    match tokenlist.head with 
+    | "SEMI" -> let vdecl tokenlist_vdecl = parseVdecl tokenlist.next in 
+                let vdecl_list tokenlist_vdecl_list = parseVdeclList tokenlist_vdecl in 
+                (tokenlist_vdecl_list, Ast(vdecl, vdecl list))
+    | "LPAREN" -> (tokenlist.next, Ast.Lparen)
+    | "RETURN" -> (tokenlist.next, Ast.Lparen)
+    | "LBRACE" -> (tokenlist.next, Ast.Lparen)
+    | "IF" -> (tokenlist.next, Ast.If)
+    | "FOR" -> (tokenlist.next, Ast.For)
+    | "WHILE" -> (tokenlist.next, Ast.While)
+    | "LITERAL" -> (tokenlist.next, Ast.Literal)
+    | "MINUS" -> (tokenlist.next, Ast.Minus)
+    | "NOT" -> (tokenlist.next, Ast.Not)
+    | "ID" -> (tokenlist.next, Ast.Lparen)
 
-let is_same t1 t2 =
-  match t1, t2 with 
-  | Ident _, Ident _ -> true
-  | Number _, Number _ -> true
-  | a, b when a = b -> true
-  | _ , _ -> false
-(** Returns [true] if two [Lexer.token]s are the same type, [false] otherwise. *)
+let parseVdecl tokenlist = 
+    match tokenlist.head with 
+    | "SEMI" -> (tokenlist.next, Ast.Semi)
 
-let is_token_in l t = List.exists (is_same t) l
-(** Returns true if token 't' is in [Lexer.token list] 'l'. false otherwise. *)
+let rec parseStmtList tokenlist =
+    match tokenlist.head with 
+    | "SEMI" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("SEMI", stmt, stmt_list))
+    | "LPAREN" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("LPAREN", stmt, stmt_list))
+    | "RETURN" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("RETURN", stmt, stmt_list))
+    | "LBRACE" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("LBRACE", stmt, stmt_list))
+    | "RBRACE" -> (tokenlist.next, AST.Rbrace)
+    | "IF" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("IF", stmt, stmt_list))
+    | "FOR" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("FOR", stmt, stmt_list))
+    | "WHILE" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("WHILE", stmt, stmt_list))
+    | "LITERAL" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("LITERAL"", stmt, stmt_list))
+    | "MINUS" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("MINUS", stmt, stmt_list))
+    | "NOT" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("NOT", stmt, stmt_list))
+    | "ID" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("ID", stmt, stmt_list))
+    | "TRUE" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("TRUE", stmt, stmt_list))
+    | "FALSE" -> let stmt tokenlist_stmt = parseStmt tokenlist.next in 
+                let stmt_list tokenlist_stmt_list = parseStmtList tokenlist_stmt in 
+                (tokenlist_stmt_list, Ast("IF", stmt, stmt_list))
+   | _-> raise error
+let parseStmt tokenlist = 
+   match tokenlist.head with 
+   | "SEMI" -> let expr tokenlist_expr = parseExpr tokenlist.next in 
+               match tokenlist_expr.head with 
+               | "SEMI" -> (tokenlist_expr.next, Ast.Stmt("SEMI", expr, "SEMI"))
+               | _-> raise error 
+   | "LPAREN" -> let expr tokenlist_expr = parseExpr tokenlist.next in 
+               match tokenlist_expr.head with 
+               | "SEMI" -> (tokenlist_expr.next, Ast.Stmt("LPAREN", expr, "SEMI"))
+               | _-> raise error 
+   | "RETURN" -> let stmt_prime tokenlist_stmt_prime = parseStmtPrime tokenlist.next in 
+                 (tokenlist_stmt_prime, Ast.Return(stmt_prime))
+   | "LBRACE" -> let stmt_list tokenlist_stmt_list = parseStmtList tokenlist.next in 
+                 match tokenlist_stmt_list.head with 
+                 | "RBRACE" -> (tokenlist_stmt_list.next, AST.Stmt("LBRACE", stmt_list, "RBRACE"))
+   | "IF" -> let tokenlist_lparen = next tokenlist |> next in 
+             match tokenlist_lparen with 
+             | "LPAREN" -> let expr tokenlist_expr = next tokenlist_lparen |> parseExpr in 
+                 match next tokenlist_expr with 
+                 | "RPAREN" -> let stmt tokenlist_stmt = next tokenlist_expr |> parseStmt in 
+                     let stmt_prime_prime tokenlist_stmt_prime = next tokenlist_stmt |> parseStmtPrime in 
+                     (tokenlist_stmt_prime, Ast.Stmt("IF LPAREN", expr, "RPAREN", stmt, stmt_prime_prime)) 
+                 | _-> raise error
+             | _-> raise error
+   | "FOR" -> let tokenlist_lparen = next tokenlist |> next in 
+              let expr_opt tokenlist_expr_opt = parseExprOpt tokenlist_lparen in 
+              match tokenlist_expr_opt.head with 
+              | "SEMI" -> let expr tokenlist_expr = next tokenlist_expr_opt |> parseExpr in
+                  match tokenlist_expr.head with 
+                  |"SEMI" -> let expr_opt_two tokenlist_expr_opt_two = next tokenlist_expr |> parseExprOpt in 
+                      match tokenlist_expr_opt_two.head with 
+                      | "RPAREN" -> let stmt tokenlist_stmt = next tokenlist_expr_opt_two |> parseStmt in 
+                          (tokenlist_stmt, Ast.Stmt("FOR LPAREN", expr_opt, "SEMI", expr, "SEMI", expr_opt_two, "RPAREN", stmt))
+                      | _-> raise error 
+                  | _-> raise error
+              | _-> raise error
+   | "WHILE" -> let tokenlist_lparen = next tokenlist |> next in 
+                let expr tokenlist_expr = parseExpr tokenlist_lparen in 
+                   match tokenlist_expr with 
+                   |"RPAREN" -> let stmt tokenlist_stmt = next tokenlist_expr |> parseStmt in 
+                                (tokenlist_stmt, Ast.Stmt("WHILE LPAREN", expr, "RPAREN", stmt))
+                   | _-> raise error
+   | _-> raise error
 
-let expect t tokenlist =
-  let expected = is_same t tokenlist.lookahead in
-  if expected then (next tokenlist, expected) else (pb, expected)
+let parseStmtPrime tokenlist = 
+     match tokenlist.head with 
+     | "SEMI" -> (next tokenlist, Ast.Semi)
+     | "LPAREN" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                      match tokenlist_expr.head with 
+                      |"SEMI" -> (next tokenlist_expr, Ast.StmtPrime("LPAREN", expr, "SEMI")) 
+     | "LITERAL" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                      match tokenlist_expr.head with 
+                      |"SEMI" -> (next tokenlist_expr, Ast.StmtPrime("LITERAL", expr, "SEMI")) 
+     | "MINUS" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                      match tokenlist_expr.head with 
+                      |"SEMI" -> (next tokenlist_expr, Ast.StmtPrime("MINUS", expr, "SEMI")) 
+     | "NOT" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                      match tokenlist_expr.head with 
+                      |"SEMI" -> (next tokenlist_expr, Ast.StmtPrime("NOT", expr, "SEMI")) 
+     | "ID" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                      match tokenlist_expr.head with 
+                      |"SEMI" -> (next tokenlist_expr, Ast.StmtPrime("ID", expr, "SEMI")) 
+     | "TRUE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                      match tokenlist_expr.head with 
+                      |"SEMI" -> (next tokenlist_expr, Ast.StmtPrime("TRUE", expr, "SEMI")) 
+     | "FALSE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                      match tokenlist_expr.head with 
+                      |"SEMI" -> (next tokenlist_expr, Ast.StmtPrime("FALSE", expr, "SEMI")) 
+     | _ -> raise error  
 
-(** Expects the given token [t] to match the [tokenlist.lookahead] token in [pb]. Raises 'Syntax_error' exception
-    if the two tokens donot match. *)
+let parseStmtPrimePrime tokenlist = 
+    match tokenlist.head with 
+    | "NOELSE" -> (next tokenlist, Ast.NOELSE))
+    |"ELSE" -> (next tokenlist, Ast.ELSE)
+    | _-> raise error 
 
-
-(* actuals_opt = actuals_list | epsilon*)
-let rec parse_actuals_opt tokenlist = parse_actuals_list tokenlist
-
-(* actuals_list = expr actuals_list_prime*)
-and parse_actuals_list tokenlist = let(tokenlist, e) = parse_expr tokenlist in 
-				   let(tokenlist, x) = parse_actuals_list_prime tokenlist in
-				   let(tokenlist, expected) = expect Comma tokenlist in 
-                                   if expected then (tokenlist, Actual(e)) else expect_error pb Comma "parse_Actuals_list"
-(* how to account for the epsilon that actuals_list_prime could return??*)
-
-(*Actuals_list_prime = COMMA expr actuals_list_prime | epsilon *)
-and parse_actuals_list_prime tokenlist = 
-  match tokenlist.lookahead with 
-  | Lexer.Comma c -> let(tokenlist, e) = parse_expr next tokenlist in
-                     let(tokenlist, t) = parse_actuals_list_prime tokenlist 
-		     (*when do we return??? have to figure out epsilon here too*)
-
-(* Expr =  expr expr_prime_prime
-        | ID expr_prime
-        | LITERAL
-        | TRUE
-        | FALSE
-        | MINUS expr %prec NEG
-        | NOT expr
-        | LPAREN expr RPAREN *)
-let rec parse_expr tokenlist = 
-  match tokenlist.lookahead with 
-  | Lexer.Ident id -> let(tokenlist, e) = parse_expr_prime next tokenlist in (tokenlist, Ast.id(???))
-  | Lexer.Literal num -> (next tokenlist, Literal num)
-  | Lexer.True tru -> (next tokenlist, BoolLit tru)
-  | Lexer.False fal -> (next tokenlist, BoolLit fal)
-  | Lexer.Minus -> 
-      let(tokenlist, e) = parse_expr next tokenlist in
-      let(tokenlist, expected) = expect Neg tokenlist in 
-      if expected then (tokenlist, Unop(Neg, e)) else expect_error tokenlist Neg "parse_expr"   
-
-(*expr_prime = ϵ | ASSIGN expr | LPAREN actuals_opt RPAREN *)
-and parse_expr_prime tokenlist = 
-  match tokenlist.lookahead with 
-  | Lexer.Assign x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.Assign(e))
-  | Lexer.Lparen l -> 
-      let(tokenlist, e) = parse_actuals_opt next tokenlist in 
-      let(tokenlist, expected) = expect Rparen tokenlist in 
-      if expected then (tokenlist, Expr e) else expect_error tokenlist Rparen "parse_expr_prime"
-      (* have to figure out epsilon*)
-
-(*Expr_prime_prime = PLUS expr| MINUS expr| TIMES expr| DIVIDE expr| EQ expr| NEQ expr| LT expr| LEQ expr| GT expr| GEQ expr| AND expr| OR expr *)
-and parse_expr_prime_prime tokenlist = 
-    match tokenlist.lookahead with 
-    | Lexer.Plus x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.Plus(e))
-    | Lexer.Minus x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.Minus(e))
-    | Lexer.Times x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.Times(e))
-    | Lexer.Divide x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.Divide(e))
-    | Lexer.EQ x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.EQ(e))
-    | Lexer.NEQ x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.NEQ(e))
-    | Lexer.LT x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.LT(e))
-    | Lexer.LEQ x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.LEQ(e))
-    | Lexer.GT x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.GT(e))
-    | Lexer.GEQ x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.GEQ(e))
-    | Lexer.AND x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.AND(e))
-    | Lexer.OR x -> let(tokenlist, e) = parse_expr next tokenlist in (tokenlist, Ast.AND(e))
-   
-
-(* program = decls . *)
-let program tokenlist = 
-  let (tokenlist, decls_tree) = parse_decls tokenlist in 
-  if tokenlist.lookahead = Lexer.Period then Program(decls_tree)
-  else expect_error tokenlist Lexer.Period "program"
+let parseExprOpt tokenlist = 
+    match tokenlist.head with 
+    |"SEMI" -> (tokenlist, []) 
+    | "LPAREN" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  (tokenlist_expr, Ast.ExprOpt("LPAREN", expr))
+    |"RPAREN" -> (tokenlist, []) 
+    | "LITERAL" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  (tokenlist_expr, Ast.ExprOpt("LITERAL", expr))
+    | "MINUS" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  (tokenlist_expr, Ast.ExprOpt("MINUS", expr))
+    | "NOT" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  (tokenlist_expr, Ast.ExprOpt("NOT", expr))
+    | "ID" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  (tokenlist_expr, Ast.ExprOpt("ID", expr))
+    | "TRUE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  (tokenlist_expr, Ast.ExprOpt("TRUE", expr))
+    | "FALSE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  (tokenlist_expr, Ast.ExprOpt("FALSE", expr))
 
 
-(* Main entry point to the parser. *)
-let parse_csomething lb =
-  let tokenlist = {lookahead = Lexer.Eof; lexbuf = lb}
-  in
-  program tokenlist
+let parseExpr tokenlist =
+    match tokenlist.head with 
+    | "LITERAL" -> let expr_prime tokenlist_expr_prime = next tokenlist |> parseExprPrime in 
+                   (tokenlist_expr_prime, Ast.Expr("LITERAL", expr_prime))
+    | "TRUE" -> let expr_prime tokenlist_expr_prime = next tokenlist |> parseExprPrime in   
+                   (tokenlist_expr_prime, Ast.Expr("TRUE", expr_prime))
+    | "FALSE" -> let expr_prime tokenlist_expr_prime = next tokenlist |> parseExprPrime in  
+                   (tokenlist_expr_prime, Ast.Expr("FALSE", expr_prime))
+    | "ID" -> let tokenlist_id = next tokenlist in 
+                          match tokenlist_id.head with
+                          | "ASSIGN" -> let tokenlist_assign = next tokenlist_id in 
+                                         let expr tokenlist_expr = parseExpr tokenlist_assign in 
+                                         let expr_prime tokenlist_expr_prime = parseExprPrime tokenlist_expr in
+                                         (tokenlist_expr_prime, Ast.Expr("ID ASSIGN", expr, expr_prime))
+                          | "LPAREN" ->  let actuals_opt tokenlist_actuals = next tokenlist_id |> parseActualsOpt in 
+                                         match tokenlist_actuals.head with
+                                         | "RPAREN" -> let expr_prime tokenlist_expr_prime = next tokenlist_actuals |> parseExprPrime in
+                                                        (tokenlist_expr_prime, Ast.Expr("ID LPAREN", actuals_opt, "RPAREN", expr_prime))
+                                         | _-> raise error
+                          | (*how to account for ID expr_prime*)
+    | "MINUS" -> let expr tokenlist_expr = next tokenlist |> parseExpr in  
+                   match  tokenlist_expr with
+                   | "NEG" -> let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                              (tokenlist_expr_prime, Ast.Expr("MINUS", expr, "NEG", expr_prime))
+    | "NOT" -> let expr tokenlist_expr = next tokenlist |> parseExpr in
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExpr in
+                  (tokenlist_expr_prime, Ast.Expr("NOT", expr, expr_prime))  
+    | "LPAREN" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  match tokenlist_expr.head with
+                  | "RPAREN" -> let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in
+                                (tokenlist_expr_prime, Ast.Expr("LPAREN", expr, "RPAREN", expr_prime))
+                  | _-> raise error
+    | _-> raise error
+
+
+let parseExprPrime tokenlist =
+  match tokenlist with
+   | "PLUS" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("PLUS", expr, expr_prime))
+   | "MINUS" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("MINUS", expr, expr_prime))
+   | "PLUS" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("PLUS", expr, expr_prime))
+
+
+   | "TIMES" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("TIMES", expr, expr_prime))
+   | "DIVIDE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("DIVIDE", expr, expr_prime))
+   | "EQ" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("EQ", expr, expr_prime))
+   | "NEQ" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("NEQ", expr, expr_prime))
+   | "LT" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("LT", expr, expr_prime))
+  | "LEQ" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("LEQ", expr, expr_prime))
+   | "GT" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("GT", expr, expr_prime))
+  | "GEQ" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("GEQ", expr, expr_prime))
+  | "AND" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("AND", expr, expr_prime))
+   | "OR" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
+                (tokenlist_expr_prime, Ast.ExprPrime("OR", expr, expr_prime))
+   | "SEMI" -> (tokenlist, [])
+   | "RPAREN" -> (tokenlist, [])
+   | "NEG" -> (tokenlist, [])
+   | "PLUS" -> (tokenlist, [])
+   | "MINUS" -> (tokenlist, [])
+   | "TIMES" -> (tokenlist, [])
+   | "DIVIDE" -> (tokenlist, [])
+   | "EQ" -> (tokenlist, [])
+   | "NEQ" -> (tokenlist, [])
+   | "LT" -> (tokenlist, [])
+   | "LEQ" -> (tokenlist, [])
+   | "GT" -> (tokenlist, [])
+   | "GEQ" -> (tokenlist, [])
+   | "AND" -> (tokenlist, [])
+   | "OR" -> (tokenlist, [])
+   | "COMMA" -> (tokenlist, [])
+   | _ -> raise error  
+
+
+
+let parseActualsOpt tokenlist = 
+  match tokenlist.head with
+  | "LITERAL" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("LITERAL", actuals_list))
+  | "TRUE" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("TRUE", actuals_list))
+  | "FALSE" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("FALSE", actuals_list))
+  | "ID" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("ID", actuals_list))
+  | "MINUS" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("MINUS", actuals_list))
+  | "NOT" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("NOT", actuals_list))
+  | "LPAREN" -> let actuals_list tokenlist_actuals = next tokenlist |> parseActualsList in
+                  (tokenlist_actuals, Ast.ActualsOpt("LPAREN", actuals_list))
+  | "RPAREN" -> expr2
+  | _ -> raise error
+
+let parseActualsList tokenlist = 
+  match value with
+  | patt -> expr
+  | "LITERAL" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+  | "TRUE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("TRUE", expr, actuals_list_prime))
+  | "FALSE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("FALSE", expr, actuals_list_prime))
+  | "ID" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("ID", expr, actuals_list_prime))
+  | "MINUS" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("MINUS", expr, actuals_list_prime))
+  | "NOT" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("NOT", expr, actuals_list_prime))
+  | "LPAREN" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
+                  let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("LPAREN", expr, actuals_list_prime))
+  | _ -> raise error
+
+let rec parseActualsListPrime tokenlist = 
+  match tokenlist.head with
+  | "COMMA" -> let expr tokenlist_expr = next tokenlist |> parseExpr in
+                let actuals_list_prime tokenlist_actuals_prime = next tokenlist_expr |> parseExpr in
+                (tokenlist_actuals_prime, Ast.ActualsListPrime("COMMA", expr, actuals_list_prime))
+  | "RPAREN" -> (tokenlist, [])
+  | _ -> raise error
+

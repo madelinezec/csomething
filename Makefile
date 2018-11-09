@@ -1,5 +1,5 @@
 RESULT = csomething
-SOURCES = src/lexer.ml\
+SOURCES = src/lexer.ml \ src/parser.ml\ 
 
 all: native-code
 

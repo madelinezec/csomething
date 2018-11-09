@@ -5,6 +5,7 @@ type token =
     | Numeral of string
     | Int
     | Float
+    | Void
     | Matrix
     | LeftParens
     | RightParens
@@ -64,6 +65,7 @@ let scan_keyword_or_id st =
     let str = read_until_special_char st in
     match str with
         "int" -> Int
+      | "void" -> Void
       | "mat" -> Matrix
       | "if" -> If
       | "else" -> Else

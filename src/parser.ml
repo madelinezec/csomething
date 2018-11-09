@@ -30,7 +30,6 @@ let parseDecls tokenlist =
     | "EOF" -> (tokenlist, [])
     | _-> raise error
 
-
 (* decls_prime = vdecl decls | fdecl decls *)
 let parseDeclsPrime tokenlist =
     match tokenlist.head with 

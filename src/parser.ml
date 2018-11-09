@@ -15,18 +15,18 @@ exception SyntaxError of string
 
 (*decls = typ “id” decls_prime | epsilon *)
 let parseDecls tokenlist = 
-    match tokenlist.lookathead with 
-    | "INT" -> match tokenlist.head with 
-               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime in (tokenlist_decls_prime, Ast.Decls("INT", "ID", decls_prime))
-               | _ -> raise error
-    | "BOOL" -> match tokenlist.head with 
-               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime  in (tokenlist_decls_prime, Ast.Decls("BOOL", "ID", decls_prime))
-               | _ -> raise error
-    | "INT" -> match tokenlist.head with 
-               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime in (tokenlist_decls_prime, Ast.Decls("VOID", "ID", decls_prime))
-               | _ -> raise error
-    | "EOF" -> (tokenlist, parseTree)
+    let typ tokenlist_typ = next |> parseTyp in 
+    match tokenlist_typ.lookathead with 
+        | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime in (tokenlist_decls_prime, Ast.Decls(typ, identifier, decls_prime))
+    | "EOF" -> (tokenlist, [])
     | _-> raise error
+
+let parseTyp tokenlist = 
+    match tokenlist.head with 
+    | "INT" -> (tokenlist.next, Int) 
+    | "BOOL" -> (tokenlist.next, Bool)
+    | "VOID" -> (tokenlist.next, Void)  
+    | "EOF" -> (tokenlist, [])
 
 (* decls_prime = vdecl decls | fdecl decls *)
 let parseDeclsPrime tokenlist =
@@ -431,10 +431,15 @@ let rec parseActualsListPrime tokenlist =
 (*Program = decls “EOF”*)
 let parseProgram tokenlist = 
     match tokenlist.head with 
-      Lexer.Int -> let decls tokenlist_decls = parseDecls tokenlist in 
-               let EOF tokenlist_EOF = parseEOF tokenlist_decls in ([], Ast.Program(decls, EOF))
-                (* How to return empty token list? *)
-    | Lexer.EOF -> let decls tokenlist_decls = parseDecls tokenlist in 
-               let Lexer.EOF tokenlist_EOF = parseEOF tokenlist_decls in ([], Ast.Program(decls, EOF))
-    | _ -> raise @@ SyntaxError "Int or EOF expected"
+    | "Int" -> let decls tokenlist_decls = parseDecls tokenlist in 
+               match tokenlist_decls.next with
+               | "EOF" -> ([], Program decls)
+    | "BOOL" -> let decls tokenlist_decls = parseDecls tokenlist in 
+               match tokenlist_decls.next with
+               | "EOF" -> ([], Program decls)
+    | "VOID" -> let decls tokenlist_decls = parseDecls tokenlist in 
+               match tokenlist_decls.next with
+               | "EOF" -> ([], Program decls)
+    | "EOF" -> ([], [])
+    | _ -> raise error
 

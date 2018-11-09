@@ -15,18 +15,16 @@ exception SyntaxError of string
 
 (*decls = typ “id” decls_prime | epsilon *)
 let parseDecls tokenlist = 
-    match tokenlist.lookathead with 
-    | "INT" -> match tokenlist.head with 
+    match tokenlist.head with
+    (* TODO do we need next tokenlist here? *)
+        | Lexer.Int-> match tokenlist.head with 
                | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime in (tokenlist_decls_prime, Ast.Decls("INT", "ID", decls_prime))
-               | _ -> raise error
-    | "BOOL" -> match tokenlist.head with 
-               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime  in (tokenlist_decls_prime, Ast.Decls("BOOL", "ID", decls_prime))
-               | _ -> raise error
-    | "INT" -> match tokenlist.head with 
+               | _ -> raise SyntaxError @ "Expecting ID"
+        | Lexer.Void -> match tokenlist.head with 
                | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime in (tokenlist_decls_prime, Ast.Decls("VOID", "ID", decls_prime))
                | _ -> raise error
-    | "EOF" -> (tokenlist, parseTree)
-    | _-> raise error
+        | Lexer.EOF -> (tokenlist, Ast.Epsilon)
+        | _-> raise error
 
 (* decls_prime = vdecl decls | fdecl decls *)
 let parseDeclsPrime tokenlist =
@@ -431,10 +429,10 @@ let rec parseActualsListPrime tokenlist =
 (*Program = decls “EOF”*)
 let parseProgram tokenlist = 
     match tokenlist.head with 
-      Lexer.Int -> let decls tokenlist_decls = parseDecls tokenlist in 
-               let EOF tokenlist_EOF = parseEOF tokenlist_decls in ([], Ast.Program(decls, EOF))
+      Lexer.Int -> let decls, tokenlist_decls = parseDecls tokenlist in 
+               let EOF, tokenlist_EOF = parseEOF tokenlist_decls in ([], Ast.Program(decls, EOF))
                 (* How to return empty token list? *)
-    | Lexer.EOF -> let decls tokenlist_decls = parseDecls tokenlist in 
-               let Lexer.EOF tokenlist_EOF = parseEOF tokenlist_decls in ([], Ast.Program(decls, EOF))
+    | Lexer.EOF -> let decls, tokenlist_decls = parseDecls tokenlist in 
+               let Lexer.EOF, tokenlist_EOF = parseEOF tokenlist_decls in ([], Ast.Program(decls, EOF))
     | _ -> raise @@ SyntaxError "Int or EOF expected"
 

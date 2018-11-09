@@ -17,13 +17,13 @@ exception SyntaxError of string
 let parseDecls tokenlist = 
     match tokenlist.lookathead with 
     | "INT" -> match tokenlist.head with 
-               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime in (tokenlist_decls_prime, Ast.Decls("INT", "ID", decls_prime)
+               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime in (tokenlist_decls_prime, Ast.Decls("INT", "ID", decls_prime))
                | _ -> raise error
     | "BOOL" -> match tokenlist.head with 
-               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime  in (tokenlist_decls_prime, Ast.Decls("BOOL", "ID", decls_prime)
+               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime  in (tokenlist_decls_prime, Ast.Decls("BOOL", "ID", decls_prime))
                | _ -> raise error
     | "INT" -> match tokenlist.head with 
-               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime in (tokenlist_decls_prime, Ast.Decls("VOID", "ID", decls_prime)
+               | "ID" -> let decls_prime tokenlist_decls_prime = next tokenlist_typ |> parseDeclsPrime in (tokenlist_decls_prime, Ast.Decls("VOID", "ID", decls_prime))
                | _ -> raise error
     | "EOF" -> (tokenlist, parseTree)
     | _-> raise error
@@ -70,17 +70,17 @@ let parseFormalList tokenlist =
     | "INT" -> let tokenlist_next = next tokenlist in 
               match tokenlist_next.head with 
                | "ID" -> let tokenlist_typ = next tokenlist_next |> next in 
-                         let formal_list_prime tokenlist_formal_list_prime = parseFormalListPrime tokenlist_typ in (tokenlist_formal_list_prime, Ast.FormalList("INT", "ID", decls_prime)
+                         let formal_list_prime tokenlist_formal_list_prime = parseFormalListPrime tokenlist_typ in (tokenlist_formal_list_prime, Ast.FormalList("INT", "ID", decls_prime))
                | _ -> raise error
     | "BOOL" -> let tokenlist_next = next tokenlist in
                 match tokenlist_next.head with 
                | "ID" -> let tokenlist_typ = next tokenlist_next |> next in 
-                         let formal_list_prime tokenlist_formal_list_prime = parseFormalListPrime tokenlist_typ in (tokenlist_formal_list_prime, Ast.FormalList("BOOL", "ID", decls_prime)
+                         let formal_list_prime tokenlist_formal_list_prime = parseFormalListPrime tokenlist_typ in (tokenlist_formal_list_prime, Ast.FormalList("BOOL", "ID", decls_prime))
                | _ -> raise error
     | "VOID" -> let tokenlist_next = next tokenlist in
                 match tokenlist_next.head with 
                | "ID" -> let tokenlist_typ = next tokenlist_next |> next in 
-                         let formal_list_prime tokenlist_formal_list_prime = parseFormalListPrime tokenlist_typ in (tokenlist_formal_list_prime, Ast.FormalList("VOID", "ID", decls_prime)
+                         let formal_list_prime tokenlist_formal_list_prime = parseFormalListPrime tokenlist_typ in (tokenlist_formal_list_prime, Ast.FormalList("VOID", "ID", decls_prime))
                | _ -> raise error
     | _-> raise error
 
@@ -228,7 +228,7 @@ let parseStmtPrime tokenlist =
 (*stmt_prime_prime = NOELSE | ELSE stmt*)
 let parseStmtPrimePrime tokenlist = 
     match tokenlist.head with 
-    | "NOELSE" -> (next tokenlist, Ast.NOELSE))
+    | "NOELSE" -> (next tokenlist, Ast.NOELSE)
     |"ELSE" -> (next tokenlist, Ast.ELSE)
     | _-> raise error 
 
@@ -281,7 +281,7 @@ let parseExpr tokenlist =
                                          | "RPAREN" -> let expr_prime tokenlist_expr_prime = next tokenlist_actuals |> parseExprPrime in
                                                         (tokenlist_expr_prime, Ast.Expr("ID LPAREN", actuals_opt, "RPAREN", expr_prime))
                                          | _-> raise error
-                          | (*how to account for ID expr_prime*)
+                         (*  | (*how to account for ID expr_prime*)*)
     | "MINUS" -> let expr tokenlist_expr = next tokenlist |> parseExpr in  
                    match  tokenlist_expr with
                    | "NEG" -> let expr_prime tokenlist_expr_prime = next tokenlist_expr |> parseExprPrime in 
@@ -398,6 +398,7 @@ let parseActualsList tokenlist =
   | patt -> expr
   | "LITERAL" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
                   let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
+                  (tokenlist_actuals, Ast.ActualsList("LITERAL", expr, actuals_list_prime))
   | "TRUE" -> let expr tokenlist_expr = next tokenlist |> parseExpr in 
                   let actuals_list_prime tokenlist_actuals = parseExpr tokenlist_expr in
                   (tokenlist_actuals, Ast.ActualsList("TRUE", expr, actuals_list_prime))

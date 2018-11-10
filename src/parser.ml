@@ -107,7 +107,7 @@ let rec parseExpr tokenlist =
     | Lexer.LeftParens -> let (tokenlist_t, t_expr) = next tokenlist |> parseT in 
                   let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
                   (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | Lexer.Numeral str -> let (t_expr, tokenlist_t) = next tokenlist |> parseT in 
+    | Lexer.Numeral str -> let (tokenlist_t, t_expr) = next tokenlist |> parseT in 
                   let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
                   (tokenlist_e, Ast.Expression(t_expr, e_expr))
     | Lexer.True -> let (tokenlist_t, t_expr) = next tokenlist |> parseT in 
@@ -133,14 +133,14 @@ and parseF tokenlist =
                         let tokenlist_expr_next = next tokenlist_expr in
                           begin
                           match tokenlist_expr_next.head with 
-                          | Lexer.RightParens -> (next tokenlist_expr, Ast.ExpressionParen(expr))
+                          | Lexer.RightParens -> (next tokenlist_expr_next, Ast.ExpressionParen(expr))
                           | _-> let err_msg = Printf.sprintf "Syntax Error" in
                                 raise (Syntax_error err_msg)
                           end
-  | Lexer.Numeral -> (next tokenlist, Ast.Literal(Lexer.Numeral str))
-  | Lexer.True -> (next tokenlist, Ast.BoolLit(Lexer.True))
-  | Lexer.False -> (next tokenlist, Ast.BoolLit(Lexer.False))
-  | Lexer.ID identifier -> (next tokenlist, Ast.Id(Lexer.ID))
+  | Lexer.Numeral str-> (next tokenlist, Ast.Literal(str))
+  | Lexer.True -> (next tokenlist, Ast.BoolLit(true))
+  | Lexer.False -> (next tokenlist, Ast.BoolLit(false))
+  | Lexer.ID identifier -> (next tokenlist, Ast.Id(identifier))
   | _-> let err_msg = Printf.sprintf "Syntax Error" in
         raise (Syntax_error err_msg)
 
@@ -150,16 +150,16 @@ T* -> / F T*
 T* -> ε *)
 and parseTprime tokenlist = 
   match  tokenlist.head with
-  | "TIMES" -> let (tokenlist_f, expr_f) = next tokenlist |> parseF in 
-                let (tokenlist_tprime, expr_tprime) = parseTPrime tokenlist_f in 
+  | Lexer.Multiply -> let (tokenlist_f, expr_f) = next tokenlist |> parseF in 
+                let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
                 (tokenlist_tprime, Ast.Times(expr_f, expr_tprime))
   | Lexer.Divide -> let (tokenlist_f, expr_f) = next tokenlist |> parseF in 
-                let (tokenlist_tprime, expr_tprime) = parseTPrime tokenlist_f in 
+                let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
                 (tokenlist_tprime, Ast.Divide(expr_f, expr_tprime))
-  | Lexer.Plus -> (tokenlist, [])
-  | Lexer.Minus -> (tokenlist, [])
-  | Lexer.Semicolon -> (tokenlist, [])
-  | Lexer.RightParens -> (tokenlist, [])
+  | Lexer.Plus -> (tokenlist, Ast.TPempty)
+  | Lexer.Minus -> (tokenlist, Ast.TPempty)
+  | Lexer.Semicolon -> (tokenlist, Ast.TPempty)
+  | Lexer.RightParens -> (tokenlist, Ast.TPempty)
   | _-> let err_msg = Printf.sprintf "Syntax Error" in
         raise (Syntax_error err_msg)
 
@@ -169,9 +169,9 @@ and parseT tokenlist =
   | Lexer.LeftParens -> let (tokenlist_f, expr_f) = parseF tokenlist in 
                 let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
                 (tokenlist_tprime, Ast.F(expr_f, expr_tprime))
-  | Lexer.Numeral -> let (tokenlist_f, expr_f) = parseF tokenlist in 
+  | Lexer.Numeral str -> let (tokenlist_f, expr_f) = parseF tokenlist in 
                 let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
-                (tokenlist_tprime, Ast.Literal(expr_f, expr_tprime))
+                (tokenlist_tprime, Ast.F(expr_f, expr_tprime))
   | Lexer.Bool -> let (tokenlist_f, expr_f) = parseF tokenlist in 
                 let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
                 (tokenlist_tprime, Ast.F(expr_f, expr_tprime))
@@ -189,11 +189,11 @@ E* -> ε
 *)
 and parseEPrime tokenlist =
   match tokenlist.head with
-   | Lexer.Plus -> let (expr_t, tokenlist_t) = next tokenlist |> parseT in
-                let (expr_eprime, tokenlist_e) = parseEPrime tokenlist_t in 
+   | Lexer.Plus -> let (tokenlist_t, expr_t) = next tokenlist |> parseT in
+                let (tokenlist_e, expr_eprime) = parseEPrime tokenlist_t in 
                 (tokenlist_e, Ast.Add(expr_t, expr_eprime))
-   | Lexer.Minus -> let (expr_t, tokenlist_t) = next tokenlist |> parseT in
-                let (expr_eprime, tokenlist_e) = parseEPrime tokenlist_t in 
+   | Lexer.Minus -> let (tokenlist_t, expr_t) = next tokenlist |> parseT in
+                let (tokenlist_e, expr_eprime) = parseEPrime tokenlist_t in 
                 (tokenlist_e, Ast.Minus(expr_t, expr_eprime))
    | Lexer.Semicolon -> (tokenlist, [])
    | Lexer.RightParens -> (tokenlist, [])
@@ -201,72 +201,28 @@ and parseEPrime tokenlist =
          raise (Syntax_error err_msg)
 
 
-
-(*stmt_prime ->SEMI| expr SEMI*)
-let parseStmtOpt tokenlist = 
-     match tokenlist.head with 
-     | Lexer.Semicolon -> (next tokenlist, [])
-     | Lexer.LeftParens -> let (expr, tokenlist_expr) = next tokenlist |> parseAssignment in 
-                      begin
-                      match tokenlist_expr.head with 
-                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
-                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
-                            raise (Syntax_error err_msg) 
-                      end
-     | Lexer.Numeral str -> let (expr, tokenlist_expr) = next tokenlist |> parseAssignment in 
-                      begin
-                      match tokenlist_expr.head with 
-                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
-                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
-                            raise (Syntax_error err_msg) 
-                      end
-     | Lexer.ID identifier -> let (expr, tokenlist_expr) = next tokenlist |> parseAssignment in 
-                      begin
-                      match tokenlist_expr.head with 
-                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
-                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
-                          raise (Syntax_error err_msg)
-                      end 
-     | Lexer.Bool -> let (expr, tokenlist_expr) = next tokenlist |> parseAssignment in 
-                      begin
-                      match tokenlist_expr.head with 
-                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
-                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
-                             raise (Syntax_error err_msg) 
-                      end
-     | Lexer.Bool -> let (expr, tokenlist_expr) = next tokenlist |> parseAssignment in 
-                      begin
-                      match tokenlist_expr.head with 
-                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
-                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
-                          raise (Syntax_error err_msg) 
-                      end
-     | _-> let err_msg = Printf.sprintf "Syntax Error" in
-            raise (Syntax_error err_msg) 
-
-
 (* assignmentType -> typ ASSIGN expr 
 assignmentType -> ASSSIGN expr*)
 let parseAssignmentType tokenlist = 
   match tokenlist.head with
-  |Lexer.Equality -> let (expr, tokenlist_expr) = next tokenlist |> parseExpr in 
-                (tokenlist_expr, Ast.ASSIGN(expr))
-  |Lexer.Numeral str -> let (typ, tokenlist_typ) = parseTyp tokenlist in 
-            match tokenlist_typ.lookathead with
+  |Lexer.Equality -> let (tokenlist_expr, expr) = next tokenlist |> parseExpr in 
+                (tokenlist_expr, Ast.Assign(expr))
+  |Lexer.Int -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
+            match tokenlist_typ.head with
             | Lexer.Equality -> let (expr, tokenlist_expr) = next tokenlist |> parseExpr in 
-                          (tokenlist_expr, Ast.ASSIGN(typ, expr))
+                          (tokenlist_expr, Ast.TypeAssign(typ, expr))
             | _-> let err_msg = Printf.sprintf "Syntax Error" in
                   raise (Syntax_error err_msg)
-  |Lexer.Bool -> let (typ, tokenlist_typ) = parseTyp tokenlist in 
-            match tokenlist_typ.lookathead with
+  |Lexer.Bool -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
+            match tokenlist_typ.head with
             | Lexer.Equality -> let (expr, tokenlist_expr) = next tokenlist |> parseExpr in 
-                          (tokenlist_expr, Ast.ASSIGN(typ, expr))
+                          (tokenlist_expr, Ast.TypeAssign(typ, expr))
             | _-> let err_msg = Printf.sprintf "Syntax Error" in
                   raise (Syntax_error err_msg)
-  |Lexer.Void -> let (typ, tokenlist_typ) = parseTyp tokenlist in 
-            match tokenlist_typ.lookathead with
+  |Lexer.Void -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
+            match tokenlist_typ.head with
             | Lexer.Equality -> let (expr, tokenlist_expr) = next tokenlist |> parseExpr in 
-                          (tokenlist_expr, Ast.ASSIGN(typ, expr))
+                          (tokenlist_expr, Ast.TypeAssign(typ, expr))
             | _-> let err_msg = Printf.sprintf "Syntax Error" in
                   raise (Syntax_error err_msg)
   | _-> let err_msg = Printf.sprintf "Syntax Error" in
@@ -279,7 +235,7 @@ assignmentType -> ASSSIGN expr*)
 let parseAssignment tokenlist = 
   match tokenlist.head with
   |Lexer.ID identifier -> let (assignmentType, tokenlist_assignment) = next tokenlist |> parseAssignmentType in 
-            (tokenlist_assignment, Ast.AID(assignmentType))
+            (tokenlist_assignment, Ast.IA(identifier, assignmentType))
   |Lexer.LeftParens -> let (expr, tokenlist_expr) = parseExpr tokenlist in 
               (tokenlist_expr, Ast.AExpr(expr))
   |Lexer.Numeral str -> let (expr, tokenlist_expr) = parseExpr tokenlist in 
@@ -290,6 +246,49 @@ let parseAssignment tokenlist =
               (tokenlist_expr, Ast.AExpr(expr))
   | _-> let err_msg = Printf.sprintf "Syntax Error" in
           raise (Syntax_error err_msg) 
+
+(*stmt_prime ->SEMI| expr SEMI*)
+let parseStmtOpt tokenlist = 
+     match tokenlist.head with 
+     | Lexer.Semicolon -> (next tokenlist, [])
+     | Lexer.LeftParens -> let (tokenlist_expr, expr) = next tokenlist |> parseAssignment in 
+                      begin
+                      match tokenlist_expr.head with 
+                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
+                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                            raise (Syntax_error err_msg) 
+                      end
+     | Lexer.Numeral str -> let (tokenlist_expr, expr) = next tokenlist |> parseAssignment in 
+                      begin
+                      match tokenlist_expr.head with 
+                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
+                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                            raise (Syntax_error err_msg) 
+                      end
+     | Lexer.ID identifier -> let (tokenlist_expr, expr) = next tokenlist |> parseAssignment in 
+                      begin
+                      match tokenlist_expr.head with 
+                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
+                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                          raise (Syntax_error err_msg)
+                      end 
+     | Lexer.Bool -> let (tokenlist_expr, expr) = next tokenlist |> parseAssignment in 
+                      begin
+                      match tokenlist_expr.head with 
+                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
+                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                             raise (Syntax_error err_msg) 
+                      end
+     | Lexer.Bool -> let (tokenlist_expr, expr) = next tokenlist |> parseAssignment in 
+                      begin
+                      match tokenlist_expr.head with 
+                      |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtOpt(expr)) 
+                      | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                          raise (Syntax_error err_msg) 
+                      end
+     | _-> let err_msg = Printf.sprintf "Syntax Error" in
+            raise (Syntax_error err_msg) 
+
 
 
 (*stmt -> assignment SEMI 
@@ -334,13 +333,13 @@ let parseStmt tokenlist =
             match nexthead with
             | Lexer.LeftParens -> let (expr, tokenlist_assignment) = parseAssignment nexthead in 
                           begin
-                          match tokenlist_assignment.lookathead with
+                          match tokenlist_assignment.head with
                           | Lexer.Semicolon -> let (expr2, tokenlist_assignment2) = next tokenlist_assignment |> parseAssignment in
                                       begin
-                                      match tokenlist_assignment2.lookathead with 
+                                      match tokenlist_assignment2.head with 
                                       | Lexer.Semicolon -> let (expr3, tokenlist_assignment3) = next tokenlist_assignment2 |> parseAssignment in 
                                                   begin
-                                                  match  tokenlist_assignment3.lookathead with
+                                                  match  tokenlist_assignment3.head with
                                                   | Lexer.RightParens -> let (stmt, tokenlist_stmt) = next tokenlist_assignment3 |> parseStmt in
                                                   (tokenlist_stmt, Ast.For(expr, expr2, expr3, stmt))
                                                   | _-> let err_msg = Printf.sprintf "Syntax Error" in
@@ -354,10 +353,10 @@ let parseStmt tokenlist =
                           end
    | Lexer.While -> let tokenlist_lparen = next tokenlist in 
                 begin
-                match tokenlist_lparen.lookathead with
+                match tokenlist_lparen.head with
                 | Lexer.LeftParens -> let (assignment, tokenlist_assignment) = next tokenlist_lparen |> parseAssignment in
                               begin
-                              match tokenlist_assignment.lookathead with
+                              match tokenlist_assignment.head with
                               | Lexer.RightParens -> let (stmt, tokenlist_stmt) = next tokenlist_assignment |> parseStmt in
                                             (next tokenlist_stmt, Ast.While(assignment, stmt))
                               | _-> let err_msg = Printf.sprintf "Syntax Error" in
@@ -369,7 +368,7 @@ let parseStmt tokenlist =
    | Lexer.LeftBrace -> let tokenlist_leftbrace = next tokenlist in 
                         let (expr, tokenlist_expr) = parseStmtList tokenlist_leftbrace in
                         begin
-                        match tokenlist_expr.lookathead with
+                        match tokenlist_expr.head with
                         | Lexer.RightBrace -> (next tokenlist_expr, Ast(expr))
                         | _-> let err_msg = Printf.sprintf "Syntax Error" in
                               raise (Syntax_error err_msg)

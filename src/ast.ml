@@ -32,7 +32,8 @@ type expr =
 
 and  f = 
 | ExpressionParen of expr
-| Literal of int 
+(* temporary fix *)
+| Literal of string 
 | BoolLit of bool 
 | Id of string
 
@@ -42,7 +43,7 @@ T* -> ε*)
 and tprime = 
 | Divide of f * tprime 
 | Times of f * tprime
-| TEmpty
+| TPempty
 
 (*T -> F T*)
 and t = 
@@ -54,12 +55,16 @@ E* -> ε  *)
 and eprime = 
 | Add of t * eprime
 | Minus of t * eprime
-| Eempty
+| []
 
-
+(* assignmentType -> typ ASSIGN expr 
+assignmentType -> ASSSIGN expr*)
+type assignmentType = 
+| Type of typ * expr 
+| Assign of expr 
 
 type assignment = 
-| IA of identifier * typ option
+| IA of identifier * assignmentType
 | AExpr of expr
 
 

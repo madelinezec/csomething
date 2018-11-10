@@ -2,6 +2,8 @@
 
 { open Parser }
 
+let digit = ['0'-'9']
+
 rule token = parse
   [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
 | "/*"     { comment lexbuf }           (* Comments *)
@@ -33,10 +35,14 @@ rule token = parse
 | "int"    { INT }
 | "bool"   { BOOL }
 | "void"   { VOID }
+| "float"  { FLOAT }
 | "mat"    { MAT }
 | "true"   { TRUE }
 | "false"  { FALSE }
-| ['0'-'9']+ as num { LITERAL(int_of_string num) }
+| digit+ as int_num {LITERAL(int_of_string int_num)}
+| digit+
+| "." digit+
+| digit+ "." digit*  as num { NUMBER(float_of_string num) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxid { ID(lxid) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }

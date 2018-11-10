@@ -60,19 +60,21 @@ and eprime =
 (* assignmentType -> typ ASSIGN expr 
 assignmentType -> ASSSIGN expr*)
 type assignmentType = 
-| Type of typ * expr 
 | Assign of expr 
+| TypeAssign of typ * expr 
 
 type assignment = 
 | IA of identifier * assignmentType
 | AExpr of expr
 
+type stmt_opt = StmtExpression of assignment | OptNil
 
 type stmtlist =
     | StmtList of stmt * stmtlist
     | StmtlistNil 
 (* OR type stmt_list = 
 | StatementList of stmt * (stmt list) option ???*)
+(*stmt_prime ->SEMI| expr SEMI*)
 
 (*. stmt -> assignment SEMI 
 stmt -> RETURN stmt_opt 
@@ -82,15 +84,16 @@ stmt -> FOR LPAREN assignment SEMI assignment SEMI assignment RPAREN stmt
 stmt -> WHILE LPAREN assignment RPAREN stmt
 *)
 and stmt = 
-| Assignment of identifier * typ option * expr
-| Return of expr option
+| Assignment of assignment
+| Return of stmt_opt 
 | Parentheses of stmtlist
 | If of assignment * stmt
 | For of assignment * assignment * assignment * stmt
 | While of assignment * stmt
 (*“lparen” formals_opt “rparen” “LBRACE” vdecl_list stmt_list “RBRACE”*)
+
 type functiondeclaration =
-    | Fdecl of formalsOpt * variabledeclarationlist * stmtlist
+    | Funcdecl of formalsOpt * variabledeclarationlist * stmtlist
 
 
 type decls = 
@@ -103,4 +106,5 @@ and declsprime =
    | Fdecl of functiondeclaration * decls
 
 type program =
-   |  Decls of typ * identifier * declsprime
+   |  Program of decls 
+   | ProgramNil

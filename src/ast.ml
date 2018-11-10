@@ -18,11 +18,12 @@ and formalList =
 (*formals_opt = formal_list | epsilon *)
 type formalsOpt =
    | FormalsOpt of formalList
+   | []
+
 
 type variabledeclarationlist =
     | VdeclList of variabledeclarationlist
-(*stmt stmt_list | epsilon*)
-
+    | []
 
 
 (*expr -> T E* *)
@@ -87,29 +88,6 @@ type functiondeclaration =
     | Fdecl of formalsOpt * variabledeclarationlist * stmtlist
 
 
-
-(*stmt -> assignment SEMI 
-stmt -> RETURN stmt_opt 
-stmt -> LBRACE stmt_list RBRACE 
-stmt -> IF LPAREN assignment RPAREN stmt 
-stmt -> FOR LPAREN assignment SEMI assignment SEMI assignment RPAREN stmt  
-stmt -> WHILE LPAREN assignment RPAREN stmt*)
-
-
-(*assignment -> ID assignmentType
-assignment -> expr
-type assignment = 
-| identifier of id * assignmentType
-| AExpr of expr
-
-(*assignmentType -> typ ASSIGN expr 
-assignmentType -> ASSSIGN expr*)
-type assignmentType = 
-| AType of typ option * expr
-*)
-
-(*
-decls = typ “id” decls_prime | epsilon*)
 type decls = 
 | Declaration of typ * identifier * declsprime 
 | DEmpty

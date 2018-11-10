@@ -3,32 +3,40 @@ type typ =
    | Bool
    | Void
    | Epsilon
+[@@deriving show]
+
 
 type identifier = string
+[@@deriving show]
 
 
 type formallistprime =
     | FormalListPrime of formalList
     | Fempty
+[@@deriving show]
 
 (* typ “ID” formal_list_prime *)
 and formalList =
     | FormalList of typ * identifier * formallistprime
+[@@deriving show]
 
 (*formals_opt = formal_list | epsilon *)
 type formalsOpt =
    | FormalsOpt of formalList
-   | []
+   | FormalsOptEmpty
+[@@deriving show]
 
 
 type variabledeclarationlist =
     | VdeclList of variabledeclarationlist
-    | []
+    | VdeclListEmpty
+[@@deriving show]
 
 
 (*expr -> T E* *)
 type expr = 
 | Expression of t * eprime 
+[@@deriving show]
 
 and  f = 
 | ExpressionParen of expr
@@ -36,6 +44,7 @@ and  f =
 | Literal of string 
 | BoolLit of bool 
 | Id of string
+[@@deriving show]
 
 (*T* -> TIMES F T* 
 T* -> / F T* 
@@ -44,10 +53,12 @@ and tprime =
 | Divide of f * tprime 
 | Times of f * tprime
 | TPempty
+[@@deriving show]
 
 (*T -> F T*)
 and t = 
 | F of f * tprime
+[@@deriving show]
 
 (*E* -> + T E* 
 E* -> - T E* 
@@ -55,23 +66,28 @@ E* -> ε  *)
 and eprime = 
 | Add of t * eprime
 | Minus of t * eprime
-| []
+| EPrimeEmpty
+[@@deriving show]
 
 (* assignmentType -> typ ASSIGN expr 
 assignmentType -> ASSSIGN expr*)
 type assignmentType = 
 | Assign of expr 
 | TypeAssign of typ * expr 
+[@@deriving show]
 
 type assignment = 
 | IA of identifier * assignmentType
 | AExpr of expr
+[@@deriving show]
 
 type stmt_opt = StmtExpression of assignment | OptNil
+[@@deriving show]
 
 type stmtlist =
     | StmtList of stmt * stmtlist
     | StmtlistNil 
+[@@deriving show]
 (* OR type stmt_list = 
 | StatementList of stmt * (stmt list) option ???*)
 (*stmt_prime ->SEMI| expr SEMI*)
@@ -91,20 +107,25 @@ and stmt =
 | For of assignment * assignment * assignment * stmt
 | While of assignment * stmt
 (*“lparen” formals_opt “rparen” “LBRACE” vdecl_list stmt_list “RBRACE”*)
+[@@deriving show]
 
 type functiondeclaration =
     | Funcdecl of formalsOpt * variabledeclarationlist * stmtlist
+[@@deriving show]
 
 
 type decls = 
 | Declaration of typ * identifier * declsprime 
 | DEmpty
+[@@deriving show]
 
 (* decls_prime = vdecl decls | fdecl decls *)
 and declsprime =
    | Vdecl of decls
    | Fdecl of functiondeclaration * decls
+[@@deriving show]
 
 type program =
    |  Program of decls 
    | ProgramNil
+[@@deriving show]

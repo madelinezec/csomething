@@ -6,6 +6,7 @@ type token =
     | Int
     | Float
     | Void
+    | Bool
     | Matrix
     | LeftParens
     | RightParens
@@ -14,6 +15,7 @@ type token =
     | LeftBracket
     | RightBracket
     | Plus
+    | Not
     | Increment
     | Decrement
     | Minus
@@ -23,10 +25,12 @@ type token =
     | Greater
     | Less
     | Equality
+    | Neq
     | Assignment 
     | Leq
     | Geq
     | Semicolon
+    | Comma
     | If
     | Else
     | While
@@ -36,7 +40,12 @@ type token =
     | Case
     | Break
     | Continue
+    | Return
     | EOF
+    | True
+    | False
+    | And
+    | Or
     | Invalid
 
 exception ImpossibleChar of char
@@ -66,6 +75,7 @@ let scan_keyword_or_id st =
     match str with
         "int" -> Int
       | "void" -> Void
+      | "bool" -> Bool
       | "mat" -> Matrix
       | "if" -> If
       | "else" -> Else
@@ -77,6 +87,9 @@ let scan_keyword_or_id st =
       | "break" -> Break
       | "continue" -> Continue
       | "float" -> Float
+      | "return" -> Return
+      | "true" -> True
+      | "false" -> False
       | s -> ID s
 
 (* assuming the next token is a numeral, get it *)
@@ -116,6 +129,12 @@ let rec scan st =
                         Some '=' -> ignore (next st); Equality
                       | _ -> Assignment
                     end
+              | '!' -> 
+                    begin match peek st with
+                        Some '=' -> ignore (next st); Neq
+                      | _ -> Not
+                    end
+               
               | '>' ->
                     begin match peek st with
                         Some '=' -> ignore (next st); Geq
@@ -126,6 +145,17 @@ let rec scan st =
                         Some '=' -> ignore (next st); Leq
                       | _ -> Less
                     end
+              | '&' ->
+                    begin match peek st with
+                        Some '&' -> ignore (next st); And
+                      | _ -> Invalid
+                    end
+              | '|' ->
+                    begin match peek st with
+                        Some '|' -> ignore (next st); Or
+                      | _ -> Invalid
+                    end
+              | ',' -> Comma
               | ';' -> Semicolon
               | x -> raise @@ ImpossibleChar x
 

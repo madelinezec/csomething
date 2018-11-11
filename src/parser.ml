@@ -256,7 +256,7 @@ let parseAssignment tokenlist =
               (tokenlist_expr, Ast.AExpr(expr))
   |Lexer.False -> let (tokenlist_expr, expr) = parseExpr tokenlist in 
               (tokenlist_expr, Ast.AExpr(expr))
-  | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+  | _-> let err_msg = __LOC__ ^ "Syntax Error identifier, str, true, false expected bu received" ^ show_token_list tokenlist in
           raise (Syntax_error err_msg) 
 
 (*stmt_prime ->SEMI| expr SEMI*)
@@ -267,38 +267,38 @@ let parseStmtOpt tokenlist =
                       begin
                       match tokenlist_expr.head with 
                       |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtExpression(expr)) 
-                      | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                      | _-> let err_msg = __LOC__ ^ "Syntax Error Semicolon expected but received " ^ show_token_list tokenlist in
                             raise (Syntax_error err_msg) 
                       end
      | Lexer.Numeral str -> let (tokenlist_expr, expr) = next tokenlist |> parseAssignment in 
                       begin
                       match tokenlist_expr.head with 
                       |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtExpression(expr))
-                      | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                      | _-> let err_msg = __LOC__ ^ "Syntax Error Semicolon expected but received" ^ show_token_list tokenlist in
                             raise (Syntax_error err_msg) 
                       end
      | Lexer.ID identifier -> let (tokenlist_expr, expr) = next tokenlist |> parseAssignment in 
                       begin
                       match tokenlist_expr.head with 
                       |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtExpression(expr)) 
-                      | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                      | _-> let err_msg = __LOC__ ^ "Syntax Error Semicolon expected but received" ^ show_token_list tokenlist in
                           raise (Syntax_error err_msg)
                       end 
      | Lexer.True -> let (tokenlist_expr, expr) = next tokenlist |> parseAssignment in 
                       begin
                       match tokenlist_expr.head with 
                       |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtExpression(expr))
-                      | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                      | _-> let err_msg = __LOC__ ^ "Syntax Error Semicolon expected but received" ^ show_token_list tokenlist in
                              raise (Syntax_error err_msg) 
                       end
      | Lexer.False -> let (tokenlist_expr, expr) = next tokenlist |> parseAssignment in 
                       begin
                       match tokenlist_expr.head with 
                       |Lexer.Semicolon -> (next tokenlist_expr, Ast.StmtExpression(expr))
-                      | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                      | _-> let err_msg = __LOC__ ^ "Syntax Error Semicolon expected but received" ^ show_token_list tokenlist in
                           raise (Syntax_error err_msg) 
                       end
-     | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+     | _-> let err_msg = __LOC__ ^ "Syntax Error semicolon, int literal, true, false, id expected but received" ^ show_token_list tokenlist in
             raise (Syntax_error err_msg) 
 
 
@@ -342,7 +342,7 @@ let rec parseStmtList tokenlist =
     | Lexer.False -> let (tokenlist_stmt, stmt) = parseStmt tokenlist in  
                 let (tokenlist_stmt_list, stmt_list) = parseStmtList tokenlist_stmt in 
                 (tokenlist_stmt_list, Ast.StmtList(stmt, stmt_list))
-    | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+    | _-> let err_msg = __LOC__ ^ "Syntax Error in stmt list" ^ show_token_list tokenlist in
           raise (Syntax_error err_msg)
 
 (*stmt -> assignment SEMI 
@@ -360,35 +360,35 @@ and parseStmt tokenlist =
                 begin
                 match tokenlist_assignment.head with
                 | Lexer.Semicolon -> (tokenlist_assignment, Ast.Assignment(assignment))
-                | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                | _-> let err_msg = __LOC__ ^ "Syntax Error semicolon expected but received" ^ show_token_list tokenlist in
                      raise (Syntax_error err_msg) 
                 end
    |  Lexer.LeftParens -> let (tokenlist_assignment, assignment) = parseAssignment tokenlist in
                 begin
                 match tokenlist_assignment.head with
                 | Lexer.Semicolon -> (tokenlist_assignment, Ast.Assignment(assignment))
-                | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                | _-> let err_msg = __LOC__ ^ "Syntax Error semicolon expected but received" ^ show_token_list tokenlist in
                      raise (Syntax_error err_msg) 
                  end
    | Lexer.Numeral str -> let (tokenlist_assignment, assignment) = parseAssignment tokenlist in
                 begin
                 match tokenlist_assignment.head with
                 | Lexer.Semicolon -> (tokenlist_assignment, Ast.Assignment(assignment))
-                | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                | _-> let err_msg = __LOC__ ^ "Syntax Error semicolon expected but received" ^ show_token_list tokenlist in
                      raise (Syntax_error err_msg) 
                 end
    | Lexer.True -> let (tokenlist_assignment, assignment) = parseAssignment tokenlist in
                 begin
                 match tokenlist_assignment.head with
                 | Lexer.Semicolon -> (tokenlist_assignment, Ast.Assignment(assignment))
-                | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                | _-> let err_msg = __LOC__ ^ "Syntax Error semicolon expected but received" ^ show_token_list tokenlist in
                      raise (Syntax_error err_msg) 
                 end
    | Lexer.False -> let (tokenlist_assignment, assignment) = parseAssignment tokenlist in
                 begin
                 match tokenlist_assignment.head with
                 | Lexer.Semicolon -> (tokenlist_assignment, Ast.Assignment(assignment))
-                | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                | _-> let err_msg = __LOC__ ^ "Syntax Error semicolon expected but received" ^ show_token_list tokenlist in
                      raise (Syntax_error err_msg) 
                 end
    | Lexer.Return -> let (tokenlist_stmt_opt, stmt_prime) = next tokenlist |> parseStmtOpt in 
@@ -401,10 +401,10 @@ and parseStmt tokenlist =
                                     match tokenlist_assignment.head with 
                                   | Lexer.RightParens -> let (tokenlist_stmt, stmt) = next tokenlist_assignment |> parseStmt in 
                                                         (tokenlist_stmt, Ast.If(expr, stmt)) 
-                                  | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                                  | _-> let err_msg = __LOC__ ^ "Syntax Error right parens expected but received" ^ show_token_list tokenlist in
                                         raise (Syntax_error err_msg)
                                   end
-             | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+             | _-> let err_msg = __LOC__ ^ "Syntax Error left parens expected but received" ^ show_token_list tokenlist in
                     raise (Syntax_error err_msg)
               end
    | Lexer.For -> let nexthead = next tokenlist in
@@ -421,16 +421,16 @@ and parseStmt tokenlist =
                                                   match  tokenlist_assignment3.head with
                                                   | Lexer.RightParens -> let (tokenlist_stmt, stmt) = next tokenlist_assignment3 |> parseStmt in
                                                   (tokenlist_stmt, Ast.For(expr, expr2, expr3, stmt))
-                                                  | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                                                  | _-> let err_msg = __LOC__ ^ "Syntax Error right parens expected but received" ^ show_token_list tokenlist in
                                                         raise (Syntax_error err_msg)
                                                   end
-                                      | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                                      | _-> let err_msg = __LOC__ ^ "Syntax Error semi colon expected but received" ^ show_token_list tokenlist in
                                               raise (Syntax_error err_msg)
                                       end
-                          | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                          | _-> let err_msg = __LOC__ ^ "Syntax Error semi colon expected but received" ^ show_token_list tokenlist in
                                   raise (Syntax_error err_msg)
                           end
-              | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+              | _-> let err_msg = __LOC__ ^ "Syntax Error left parens expected but received" ^ show_token_list tokenlist in
                                   raise (Syntax_error err_msg)
               end
    | Lexer.While -> let tokenlist_lparen = next tokenlist in 
@@ -441,10 +441,10 @@ and parseStmt tokenlist =
                               match tokenlist_assignment.head with
                               | Lexer.RightParens -> let (tokenlist_stmt, stmt) = next tokenlist_assignment |> parseStmt in
                                             (next tokenlist_stmt, Ast.While(assignment, stmt))
-                              | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                              | _-> let err_msg = __LOC__ ^ "Syntax Error right parens expected but received" ^ show_token_list tokenlist in
                                     raise (Syntax_error err_msg)
                               end
-                | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                | _-> let err_msg = __LOC__ ^ "Syntax Error left parens expected but received" ^ show_token_list tokenlist in
                     raise (Syntax_error err_msg)
                 end
    | Lexer.LeftBrace -> let tokenlist_leftbrace = next tokenlist in 
@@ -452,10 +452,10 @@ and parseStmt tokenlist =
                         begin
                         match tokenlist_expr.head with
                         | Lexer.RightBrace -> (next tokenlist_expr, Ast.Parentheses(expr))
-                        | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                        | _-> let err_msg = __LOC__ ^ "Syntax Error right brace expected but received" ^ show_token_list tokenlist in
                               raise (Syntax_error err_msg)
                         end
-   | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+   | _-> let err_msg = __LOC__ ^ "Syntax Error left brace expected but received" ^ show_token_list tokenlist in
                     raise (Syntax_error err_msg)
     end
 
@@ -474,13 +474,13 @@ let parseFdecl tokenlist =
                                               begin
                                               match tokenlist_stmt_list.head with 
                                               | Lexer.RightBrace -> (next tokenlist_stmt_list, Ast.Funcdecl(formals_opt, vdecl_list, stmt_list))
-                                              | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                                              | _-> let err_msg = __LOC__ ^ "Syntax Error right brace expected but received" ^ show_token_list tokenlist in
                                                       raise (Syntax_error err_msg)
                                               end
-                                | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                                | _-> let err_msg = __LOC__ ^ "Syntax Error left brace expected but received" ^ show_token_list tokenlist in
                                       raise (Syntax_error err_msg)
                                 end
-                  | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+                  | _-> let err_msg = __LOC__ ^ "Syntax Error right parens expected but received" ^ show_token_list tokenlist in
                         raise (Syntax_error err_msg)
                   end
     | _-> let err_msg = __LOC__ ^ " Syntax Error in parseFdecl, left parents expected, received:" ^ Lexer.show_token tokenlist.head in
@@ -494,7 +494,7 @@ let rec parseDecls tokenlist =
                    match tokenlist_typ.head with 
                    | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist_typ |> parseDeclsPrime in 
                                 (tokenlist_decls_prime, Ast.Declaration(typ, identifier, decls_prime))
-                   | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                   | _-> let err_msg = __LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
                           raise (Syntax_error err_msg)
                    end
     | Lexer.Bool -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
@@ -502,7 +502,7 @@ let rec parseDecls tokenlist =
                    match tokenlist_typ.head with 
                    | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist_typ |> parseDeclsPrime in 
                                 (tokenlist_decls_prime, Ast.Declaration(typ, identifier, decls_prime))
-                   | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                   | _-> let err_msg = __LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
                           raise (Syntax_error err_msg)
                    end
     | Lexer.Void -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
@@ -510,11 +510,11 @@ let rec parseDecls tokenlist =
                    match tokenlist_typ.head with 
                    | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist_typ |> parseDeclsPrime in 
                                 (tokenlist_decls_prime, Ast.Declaration(typ, identifier, decls_prime))
-                   | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                   | _-> let err_msg = __LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
                           raise (Syntax_error err_msg)
                    end
     | Lexer.EOF -> (tokenlist, Ast.DEmpty)
-    | _-> let err_msg = Printf.sprintf "Syntax Error" in
+    | _-> let err_msg = __LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
            raise (Syntax_error err_msg) 
      
 

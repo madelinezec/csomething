@@ -486,12 +486,34 @@ let parseFdecl tokenlist =
 
 (*decls = typ “id” decls_prime | epsilon *)
 let rec parseDecls tokenlist = 
-    let (tokenlist_typ, typ) = parseTyp tokenlist in 
-        match tokenlist.head with 
-        | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist |> parseDeclsPrime in 
+    match tokenlist.head with 
+    | Lexer.Int -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
+                   begin
+                   match tokenlist_typ.head with 
+                   | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist_typ |> parseDeclsPrime in 
                                 (tokenlist_decls_prime, Ast.Declaration(typ, identifier, decls_prime))
-        | Lexer.EOF -> (tokenlist, Ast.DEmpty)
-        | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                   | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                          raise (Syntax_error err_msg)
+                   end
+    | Lexer.Bool -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
+                   begin
+                   match tokenlist_typ.head with 
+                   | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist_typ |> parseDeclsPrime in 
+                                (tokenlist_decls_prime, Ast.Declaration(typ, identifier, decls_prime))
+                   | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                          raise (Syntax_error err_msg)
+                   end
+    | Lexer.Void -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
+                   begin
+                   match tokenlist_typ.head with 
+                   | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist_typ |> parseDeclsPrime in 
+                                (tokenlist_decls_prime, Ast.Declaration(typ, identifier, decls_prime))
+                   | _-> let err_msg = Printf.sprintf "Syntax Error" in
+                          raise (Syntax_error err_msg)
+
+                   end
+    | Lexer.EOF -> (tokenlist, Ast.DEmpty)
+    | _-> let err_msg = Printf.sprintf "Syntax Error" in
               raise (Syntax_error err_msg)
 
 (* decls_prime = vdecl decls | fdecl decls *)

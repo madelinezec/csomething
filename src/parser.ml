@@ -113,19 +113,19 @@ let rec parseVdeclList tokenlist =
 *)
 let rec parseExpr tokenlist =
     match tokenlist.head with 
-    | Lexer.LeftParens -> let (tokenlist_t, t_expr) = next tokenlist |> parseT in 
+    | Lexer.LeftParens -> let (tokenlist_t, t_expr) = parseT tokenlist  in 
                   let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
                   (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | Lexer.Numeral str -> let (tokenlist_t, t_expr) = next tokenlist |> parseT in 
+    | Lexer.Numeral str -> let (tokenlist_t, t_expr) = tokenlist |> parseT in 
                   let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
                   (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | Lexer.True -> let (tokenlist_t, t_expr) = next tokenlist |> parseT in 
+    | Lexer.True -> let (tokenlist_t, t_expr) = tokenlist |> parseT in 
                   let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
                   (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | Lexer.False -> let (tokenlist_t, t_expr) = next tokenlist |> parseT in 
+    | Lexer.False -> let (tokenlist_t, t_expr) = tokenlist |> parseT in 
                   let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
                   (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | Lexer.ID identifier -> let (tokenlist_t, t_expr) = next tokenlist |> parseT in 
+    | Lexer.ID identifier -> let (tokenlist_t, t_expr) = tokenlist |> parseT in 
                   let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
                   (tokenlist_e, Ast.Expression(t_expr, e_expr))
     | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
@@ -510,7 +510,7 @@ let parseFdecl tokenlist =
                   | Lexer.RightParens -> let tokenlist_rparen = next tokenlist_formals in
                                 begin
                                 match tokenlist_rparen.head with 
-                                | Lexer.LeftBrace -> let (tokenlist_vdecl_list, vdecl_list) = next tokenlist_formals |> parseVdeclList  in 
+                                | Lexer.LeftBrace -> let (tokenlist_vdecl_list, vdecl_list) = next tokenlist_rparen |> parseVdeclList  in 
                                               let (tokenlist_stmt_list, stmt_list) = parseStmtList tokenlist_vdecl_list in 
                                               begin
                                               match tokenlist_stmt_list.head with 

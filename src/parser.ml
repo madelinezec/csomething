@@ -164,7 +164,7 @@ and parseTprime tokenlist =
   | Lexer.Minus -> (tokenlist, Ast.TPempty)
   | Lexer.Semicolon -> (tokenlist, Ast.TPempty)
   | Lexer.RightParens -> (tokenlist, Ast.TPempty)
-  | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+  | _-> let err_msg = __LOC__ ^ "Syntax Error: Multiple, divide, plus, minus, Semicolon, RightParens expected but received" ^ show_token_list tokenlist in
         raise (Syntax_error err_msg)
   end
 (* T -> F T* *)
@@ -186,7 +186,7 @@ and parseT tokenlist =
   | Lexer.ID identifier -> let (tokenlist_f, expr_f) = parseF tokenlist in 
                 let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
                 (tokenlist_tprime, Ast.F(expr_f, expr_tprime))
-  | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+  | _-> let err_msg = __LOC__ ^ "Syntax Error: left parens, numeral, true, false, id expected, but received " ^ show_token_list tokenlist in
         raise (Syntax_error err_msg)
   end
 (*expr_prime = E* -> + T E* 

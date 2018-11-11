@@ -2,6 +2,8 @@
 
 .PHONY: all
 all : csomething
+	rm -rf scanner.ml parser.ml parser.mli
+	rm -rf *.cmx *.cmi *.cmo *.cmx *.o *.s *.ll *.out *.exe
 
 .PHONY : clean
 clean :

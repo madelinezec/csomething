@@ -1,2 +1,3 @@
 S src
 B src
+PKG ppx_deriving.std

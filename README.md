@@ -1,8 +1,12 @@
 PLT FALL 2018
 
-
+**Notice: please install ppx_deriving to make the code compile. **
+```
+opam install ppx_deriving
+```
 
 C Something?
+
 
 Project Proposal
 

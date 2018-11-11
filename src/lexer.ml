@@ -47,6 +47,7 @@ type token =
     | And
     | Or
     | Invalid
+    [@@deriving show]
 
 exception ImpossibleChar of char
 
@@ -172,6 +173,3 @@ let tokenize_file filename =
     let st = Stream.of_channel @@ open_in filename in
     tokenize st
 
-let main () = print_endline "This is a test for CSomething";;
-
-main ();;

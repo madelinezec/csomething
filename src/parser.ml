@@ -410,7 +410,7 @@ and parseStmt tokenlist =
    | Lexer.For -> let nexthead = next tokenlist in
             begin
             match nexthead.head with
-            | Lexer.LeftParens -> let (tokenlist_assignment, expr) = parseAssignment nexthead in 
+            | Lexer.LeftParens -> let (tokenlist_assignment, expr) = parseAssignment @@ next nexthead in 
                           begin
                           match tokenlist_assignment.head with
                           | Lexer.Semicolon -> let (tokenlist_assignment2, expr2) = next tokenlist_assignment |> parseAssignment in

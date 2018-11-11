@@ -11,5 +11,9 @@ let main () =
         let (remainder, ast) = Parser.default_tokenlist filename |> Parser.parseProgram in
         print_endline @@ Ast.show_program ast;
         debug_print_token_list remainder;;
-    
-main ();;
+
+Printexc.record_backtrace true;
+try
+    main ()
+with
+    Parser.Syntax_error e -> Printexc.print_backtrace stderr; print_newline (); print_endline e;;

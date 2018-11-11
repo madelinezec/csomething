@@ -20,7 +20,7 @@ let parseTyp tokenlist =
     | Lexer.Bool -> (next tokenlist, Ast.Bool)
     | Lexer.Void -> (next tokenlist, Ast.Void)  
     | Lexer.EOF -> (tokenlist, Ast.Epsilon)
-    | _-> let err_msg =  __LOC__ ^ " Syntax Error" in
+    | _-> let err_msg =  __LOC__ ^ " Syntax Error"  in
           raise (Syntax_error err_msg)
 
 (* formal_list = typ “ID” formal_list_prime *)
@@ -67,7 +67,7 @@ let parseFormalsOpt tokenlist =
     | Lexer.Int -> let (tokenlist_formal_list, formal_list) = next tokenlist |> parseFormalList in (tokenlist_formal_list, Ast.FormalsOpt(formal_list))
     | Lexer.Bool -> let (tokenlist_formal_list, formal_list) = next tokenlist |> parseFormalList in (tokenlist_formal_list, Ast.FormalsOpt(formal_list))
     | Lexer.Void -> let (tokenlist_formal_list, formal_list) = next tokenlist |> parseFormalList  in (tokenlist_formal_list, Ast.FormalsOpt(formal_list))
-    | Lexer.RightParens -> (tokenlist, Ast.FormalsOptEmpty)
+    | Lexer.RightParens -> (tokenlist, Ast.FormalsOptEmpty) 
     | _-> let err_msg = __LOC__ ^ " Syntax Error" in
           raise (Syntax_error err_msg)
 
@@ -481,7 +481,7 @@ let parseFdecl tokenlist =
                   | _-> let err_msg = __LOC__ ^ " Syntax Error" in
                         raise (Syntax_error err_msg)
                   end
-    | _-> let err_msg = __LOC__ ^ " Syntax Error" in
+    | _-> let err_msg = __LOC__ ^ " Syntax Error in parseFdecl, left parents expected, received:" ^ Lexer.show_token tokenlist.head in
         raise (Syntax_error err_msg)
 
 (*decls = typ “id” decls_prime | epsilon *)
@@ -523,7 +523,7 @@ and parseDeclsPrime tokenlist =
     | Lexer.Semicolon -> let tokenlist_vdecl = next tokenlist in
                 let (tokenlist_decls, decls) = parseDecls tokenlist_vdecl in 
                 (tokenlist_decls, Ast.Vdecl(decls)) 
-    | Lexer.LeftParens -> let (tokenlist_fdecl, fdecl) = next tokenlist |> parseFdecl in 
+    | Lexer.LeftParens -> let (tokenlist_fdecl, fdecl) = tokenlist |> parseFdecl in 
                 let (tokenlist_decls, decls) = parseDecls tokenlist_fdecl in 
                 (tokenlist_decls, Ast.Fdecl(fdecl, decls)) 
     | _-> let err_msg = __LOC__ ^ " Syntax Error" in

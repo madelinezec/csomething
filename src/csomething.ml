@@ -1,5 +1,5 @@
 
-let in_channel = open_in "test.c"
+let in_channel = open_in "tests/test.cst"
 
 
 let _ =   

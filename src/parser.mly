@@ -1,4 +1,3 @@
-
 %{
 open Ast
 %}
@@ -32,29 +31,28 @@ program:
   decls EOF { $1 }
 
 decls:
-   /* nothing */ { [], [] }
- | decls vdecl { ($2 :: fst $1), snd $1 }
- | decls fdecl { fst $1, ($2 :: snd $1) }
+    | /* nothing */ { [] }
+    | decl decls { $1 :: $2 }
+
+decl:
+    | vdecl { VDecl $1 }
+    | fdecl { FDecl $1 }
+
 
 fdecl:
-   typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { typ = $1;
+   typ ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
+     { { ftyp = $1;
 	 fname = $2;
 	 formals = $4;
-	 locals = List.rev $7;
-	 body = List.rev $8 } }
+	 fbody = $7 } }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
-bind:
-    typ ID {($1, $2, 1)}
-  | typ ID LBRACKET LITERAL RBRACKET {($1, $2, $4)}
-
 formal_list:
-    bind                   { [$1] }
-  | formal_list COMMA bind { $3 :: $1 }
+    vdecl                   { [$1] }
+  | formal_list COMMA vdecl { $3 :: $1 }
 
 typ:
     INT { Int }
@@ -62,23 +60,27 @@ typ:
   | VOID { Void }
   | MAT { Mat }
   | FLOAT { Float }
+  | typ LBRACKET LITERAL RBRACKET { Vec($1, $3) }
+  | typ LBRACKET LITERAL COMMA LITERAL RBRACKET { RealMat($1, $3, $5) }
 
 vdecl_list:
     /* nothing */    { [] }
-  | vdecl_list vdecl { $2 :: $1 }
+  | vdecl vdecl_list { $1 :: $2 }
 
 vdecl:
-   bind SEMI { $1 }
+    | typ ID SEMI { {vtyp = $1;  vname = $2; vvalue = None} }
+    | typ ID ASSIGN expr SEMI { {vtyp = $1; vname = $2; vvalue = Some $4} }
 
 stmt_list:
     /* nothing */  { [] }
-  | stmt_list stmt { $2 :: $1 }
+  | stmt stmt_list { $1 :: $2 }
 
 stmt:
     expr SEMI { Expr $1 }
+  | vdecl { DeclStmt $1 } 
   | RETURN SEMI { Return Noexpr }
   | RETURN expr SEMI { Return $2 }
-  | LBRACE stmt_list RBRACE { Block(List.rev $2) }
+  | LBRACE stmt_list RBRACE { Block($2) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
   | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt

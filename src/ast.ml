@@ -5,7 +5,19 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not
 
-type typ = Int | Bool | Void | Mat | Float
+type typ = 
+    | Int | Bool | Void | Mat | Float
+    | Arr of typ * int
+
+(*
+ * float a[10][10][10];
+ * VDeclOriginal (Float, "a", [10, 10, 10])
+ * typ = Arr(Arr(Arr(float,10),10),10)
+ *)
+
+type variable_decl =
+    | VDeclOriginal of typ * string * (int list)
+    | VDecl of typ * string
 
 type bind = typ * string * int
 

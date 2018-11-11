@@ -1,5 +1,5 @@
 RESULT = csomething
-SOURCES = src/lexer.ml src/parser.ml src/ast.ml src/driver.ml
+SOURCES = src/scanner.mll src/parser.mly src/ast.ml src/csomething.ml
 PACKS = ppx_deriving.std
 PP = camlp4find $(PACKS)
 export PP

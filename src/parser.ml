@@ -494,7 +494,7 @@ let rec parseDecls tokenlist =
                    match tokenlist_typ.head with 
                    | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist_typ |> parseDeclsPrime in 
                                 (tokenlist_decls_prime, Ast.Declaration(typ, identifier, decls_prime))
-                   | _-> _LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
+                   | _-> let err_msg = __LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
                           raise (Syntax_error err_msg)
                    end
     | Lexer.Bool -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
@@ -502,7 +502,7 @@ let rec parseDecls tokenlist =
                    match tokenlist_typ.head with 
                    | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist_typ |> parseDeclsPrime in 
                                 (tokenlist_decls_prime, Ast.Declaration(typ, identifier, decls_prime))
-                   | _-> __LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
+                   | _-> let err_msg = __LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
                           raise (Syntax_error err_msg)
                    end
     | Lexer.Void -> let (tokenlist_typ, typ) = parseTyp tokenlist in 
@@ -510,11 +510,11 @@ let rec parseDecls tokenlist =
                    match tokenlist_typ.head with 
                    | Lexer.ID identifier -> let (tokenlist_decls_prime, decls_prime) = next tokenlist_typ |> parseDeclsPrime in 
                                 (tokenlist_decls_prime, Ast.Declaration(typ, identifier, decls_prime))
-                   | _-> _LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
+                   | _-> let err_msg = __LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
                           raise (Syntax_error err_msg)
                    end
     | Lexer.EOF -> (tokenlist, Ast.DEmpty)
-    | _-> let err_msg = _LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
+    | _-> let err_msg = __LOC__ ^ "Syntax Error identifier expected but received" ^ show_token_list tokenlist in
            raise (Syntax_error err_msg) 
      
 

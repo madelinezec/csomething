@@ -1,4 +1,5 @@
 exception Syntax_error of string 
+exception Advancing_past_end
 (** Raised when [!Parser] encounters an unrecongnized token. *)
 
 type token_list = 
@@ -9,8 +10,14 @@ type token_list =
 
 
 let next tokenlist =
-    let {head = _; lexbuf = buf} = tokenlist in
-    {head = List.hd buf; lexbuf = List.tl buf}
+    if tokenlist.lexbuf == [] then
+    begin
+        print_endline @@ Lexer.show_token tokenlist.head;
+        raise Advancing_past_end
+    end
+    else
+        let {head = _; lexbuf = buf} = tokenlist in
+        {head = List.hd buf; lexbuf = List.tl buf}
 (** Retrieves a new parser buffer with the next lookahead token. *)
 
 let default_tokenlist filename = next {head = Lexer.EOF; lexbuf = Lexer.tokenize_file filename}

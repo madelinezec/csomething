@@ -165,7 +165,7 @@ let rec scan st =
 let rec tokenize st =
     let token = scan st in
     match token with
-        EOF -> []
+        EOF -> [EOF]
       | token -> token :: tokenize st
 
 (* tokenize a file *)

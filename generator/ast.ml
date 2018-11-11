@@ -7,7 +7,7 @@ type uop = Neg | Not
 
 type typ = Int | Bool | Void | Mat | Float
 
-type bind = typ * string
+type bind = typ * string * int
 
 type expr =
     Literal of int
@@ -85,18 +85,25 @@ let rec string_of_stmt = function
       string_of_expr e3  ^ ") " ^ string_of_stmt s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 
-let string_of_typ = function
+let rec string_of_typ = function
     Int -> "int"
   | Bool -> "bool"
   | Void -> "void"
   | Mat -> "mat"
   | Float -> "float"
 
-let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
+
+let string_of_bind (t, v, d) = 
+    if d > 1 then 
+        string_of_typ t ^ " " ^ v ^ "[" ^ string_of_int d ^ "]"
+    else
+        string_of_typ t ^ " " ^ v
+
+let string_of_vdecl b = string_of_bind b ^ ";\n"
 
 let string_of_fdecl fdecl =
   string_of_typ fdecl.typ ^ " " ^
-  fdecl.fname ^ "(" ^ String.concat ", " (List.map snd fdecl.formals) ^
+  fdecl.fname ^ "(" ^ String.concat ", " (List.map string_of_bind fdecl.formals) ^
   ")\n{\n" ^
   String.concat "" (List.map string_of_vdecl fdecl.locals) ^
   String.concat "" (List.map string_of_stmt fdecl.body) ^

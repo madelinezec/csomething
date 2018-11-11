@@ -1,10 +1,9 @@
-/* Ocamlyacc parser for MicroC */
 
 %{
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET COMMA
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token RETURN IF ELSE FOR WHILE INT BOOL VOID MAT FLOAT
@@ -49,9 +48,13 @@ formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
+bind:
+    typ ID {($1, $2, 1)}
+  | typ ID LBRACKET LITERAL RBRACKET {($1, $2, $4)}
+
 formal_list:
-    typ ID                   { [($1,$2)] }
-  | formal_list COMMA typ ID { ($3,$4) :: $1 }
+    bind                   { [$1] }
+  | formal_list COMMA bind { $3 :: $1 }
 
 typ:
     INT { Int }
@@ -65,7 +68,7 @@ vdecl_list:
   | vdecl_list vdecl { $2 :: $1 }
 
 vdecl:
-   typ ID SEMI { ($1, $2) }
+   bind SEMI { $1 }
 
 stmt_list:
     /* nothing */  { [] }

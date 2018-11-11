@@ -1,4 +1,9 @@
-void main() {
+int main() {
     a = 3;
+    
+    x = a + 4;
+   
     hello();
+
+    return 0;
 }

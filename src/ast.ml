@@ -79,10 +79,11 @@ type assignmentID =
 | MethodCall of actuals
 | VariableAssign of expr
 [@@deriving show]
-(*assignment -> ID assignmentID | typ ID assign expr *)
+(*assignment -> ID assignmentID | typ ID assign expr | expression *)
 type assignment = 
 | IDAssign of identifier * assignmentID
 | TypeAssign of typ * identifier * expr
+| NoAssign of expr
 [@@deriving show]
 
 type stmt_opt = StmtExpression of assignment | OptNil
@@ -97,7 +98,7 @@ type stmtlist =
 (*stmt_prime ->SEMI| expr SEMI*)
 
 (*. stmt -> assignment SEMI 
-stmt -> RETURN stmt_opt 
+stmt -> RETURN stmt_opt SEMI
 stmt -> LBRACE stmt_list RBRACE 
 stmt -> IF LPAREN assignment RPAREN stmt 
 stmt -> FOR LPAREN assignment SEMI assignment SEMI assignment RPAREN stmt  

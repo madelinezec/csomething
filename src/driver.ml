@@ -8,9 +8,8 @@ let main () =
         print_endline "Usage: csomething [filename]"
     else
         let filename = Sys.argv.(1) in
-        let (remainder, ast) = Parser.default_tokenlist filename |> Parser.parseProgram in
-        print_endline @@ Ast.show_program ast;
-        debug_print_token_list remainder;;
+        let ast = Parser.default_tokenlist filename |> Parser.parseProgram in
+        print_endline @@ Ast.show_program ast;;
 
 Printexc.record_backtrace true;
 try

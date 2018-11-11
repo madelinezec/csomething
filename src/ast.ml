@@ -69,16 +69,20 @@ and eprime =
 | EPrimeEmpty
 [@@deriving show]
 
-(* assignmentType -> typ ASSIGN expr 
-assignmentType -> ASSSIGN expr*)
-type assignmentType = 
-| Assign of expr 
-| TypeAssign of typ * expr 
+type actuals = 
+| ActualsList of actuals
+| SingleExpression of expr * actuals
+| NoActuals
 [@@deriving show]
-
+(* assignmentID -> ASSIGN expr | LPAREN actuals RPAREN*)
+type assignmentID = 
+| MethodCall of actuals
+| VariableAssign of expr
+[@@deriving show]
+(*assignment -> ID assignmentID | typ ID assign expr *)
 type assignment = 
-| IA of identifier * assignmentType
-| AExpr of expr
+| IDAssign of identifier * assignmentID
+| TypeAssign of typ * identifier * expr
 [@@deriving show]
 
 type stmt_opt = StmtExpression of assignment | OptNil

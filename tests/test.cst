@@ -7,7 +7,6 @@ int main(){
     float [15,15] f;
     a = 5;
     d = 1.2;
-
     if (a == d) {
         a = a + d;
         d = a + foo;

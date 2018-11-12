@@ -1,9 +1,13 @@
-{ open Parser }
+{
+open Parser
+open Lexing
+}
 
 let digit = ['0'-'9']
 
 rule token = parse
-  [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
+  [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
+| '\n'     { new_line lexbuf; token lexbuf }
 | "/*"     { comment lexbuf }           (* Comments *)
 | '('      { LPAREN }
 | ')'      { RPAREN }

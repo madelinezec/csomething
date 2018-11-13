@@ -9,6 +9,8 @@ type typ =
     | Int | Bool | Void | Mat | Float
     | Vec of typ * int
     | RealMat of typ * int * int
+    [@@deriving show]
+
 
 type expr =
     Literal of int
@@ -17,7 +19,7 @@ type expr =
   | Id of string
   | Binop of expr * op * expr
   | Unop of uop * expr
-  | Assign of string * expr
+  | Assign of expr * expr
   | Call of string * expr list
   | Noexpr (*empty*)
 
@@ -49,7 +51,8 @@ type decl =
 
 type program = decl list
 
-(* Pretty-printing functions *)
+
+    (* Pretty-printing functions *)
 
 let string_of_op = function
     Add -> "+"
@@ -80,6 +83,8 @@ let rec string_of_typ = function
   | RealMat (t, s1, s2) ->
           string_of_typ t ^ "[" ^ string_of_int s1 ^ ", " ^ string_of_int s2 ^ "]"
 
+exception UnexpectedAstEntry of expr
+
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | Number(l) -> string_of_float l
@@ -89,7 +94,7 @@ let rec string_of_expr = function
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e
-  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | Assign(v, e) -> string_of_expr v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Noexpr -> ""

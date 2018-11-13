@@ -1,5 +1,8 @@
-open Ast
 open Symbol
+
+type typ = 
+    | Int | Bool | Void | Mat | Float | Vec
+    [@@deriving show]
 
 type symbol =
     | SymVar of {sv_typ : typ; sv_is_temp : bool; sv_is_global : bool; mutable sv_ref : int }
@@ -9,11 +12,6 @@ type symbol =
 type op = Ast.op
 
 type uop = Ast.uop
-
-type typ = 
-    | Int | Bool | Void | Mat | Float | Vec
-    [@@deriving show]
-
 
 type expr =
     Literal of int
@@ -29,9 +27,9 @@ type expr =
   | Noexpr
 
 type stmt =
-    Block of symbol symbol_table * stmt list
+    Block of symbol symbol_table ref * stmt list
   | Expr of expr
-  | DeclStmt of var_decl
+  | DeclStmt of Ast.var_decl
   | Return of expr
   | If of expr * stmt * stmt
   | While of expr * stmt
@@ -39,7 +37,7 @@ type stmt =
 type func_decl = {
     ftyp : typ;
     fname : string;
-    formals : var_decl list;
+    formals : Ast.var_decl list;
     fbody : symbol symbol_table * stmt list;
 }
 
@@ -92,11 +90,29 @@ let rec desugar_expr (st : symbol symbol_table ref) = function
         Call(sym, List.map (desugar_expr st) li)
     | Ast.Noexpr -> Noexpr
 
+let default_value : Ast.typ -> Ast.expr = function _ -> raise Unimplemented
 
+let rec desugar_stmt (st : symbol symbol_table ref) = function
+    | Ast.Block li ->
+        let new_scope = ref @@ new symbol_table (Some st) show_symbol in
+        let li' = List.map (desugar_stmt new_scope) li in
+        Block (new_scope, li')
+    | Ast.Expr e -> Expr (desugar_expr st e)
+    | Ast.DeclStmt vd ->
+        let new_symbol =
+            SymVar {sv_typ = desugar_typ vd.Ast.vtyp; sv_is_temp = false; sv_is_global = false; sv_ref = 0} in
+        !st#add vd.Ast.vname new_symbol;
+        let value = 
+            begin match vd.Ast.vvalue with
+                | Some v ->  v
+                | None ->  default_value vd.Ast.vtyp
+            end in
+        Expr (desugar_expr st (Ast.Assign (Ast.Id vd.Ast.vname, value)))
 
+        
 let desugar_decl = function
-    | Ast.VDecl {vtyp = vtyp; vname = vname; vvalue = vvalue} -> raise Unimplemented
-    | Ast.FDecl {ftyp = ftyp; fname = fname; formals = formals; fbody = fbody} -> raise Unimplemented
+    | Ast.VDecl {Ast.vtyp = vtyp; vname = vname; vvalue = vvalue} -> raise Unimplemented
+    | Ast.FDecl {Ast.ftyp = ftyp; fname = fname; formals = formals; fbody = fbody} -> raise Unimplemented
 
 let rec desugar_program : Ast.program -> program = function
     | [] -> []

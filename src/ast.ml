@@ -16,6 +16,8 @@ type expr =
     Literal of int
   | Number of float
   | BoolLit of bool
+  | MatLit of expr list list
+  | VecLit of expr list
   | Id of string
   | Binop of expr * op * expr
   | Unop of uop * expr

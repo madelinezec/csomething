@@ -54,10 +54,17 @@ type decl =
 type program = decl list
 
 exception Unimplemented
+exception DesugaringBug
 exception UnknownIdentifier of string
 exception FunctionNameAsId of string
 exception CallingAnId of string
 
+let desugar_for : Ast.stmt -> Ast.stmt = function
+    | Ast.For (e1, e2, e3, body) ->
+        let loop = Ast.While(e2, Ast.Block (body :: [Ast.Expr e3])) in
+        Ast.While(e1, loop)
+    | _ -> raise DesugaringBug
+        
 let desugar_typ : Ast.typ -> typ = function
     | Ast.Int -> Int
     | Ast.Bool -> Bool
@@ -108,9 +115,11 @@ let rec desugar_stmt (st : symbol symbol_table ref) = function
                 | None ->  default_value vd.Ast.vtyp
             end in
         Expr (desugar_expr st (Ast.Assign (Ast.Id vd.Ast.vname, value)))
-    | Ast.If (e, s1, s2) -> If (desugar_expr st e, desugar_stmt st s1, desugar_stmt st s2) 
-    | Ast.While (e, s) -> While (desugar_expr st e, desugar_stmt st s)
-        
+    | Ast.Return e -> Return (desugar_expr st e)
+    | Ast.For _ as f -> desugar_stmt st (desugar_for f)
+    | Ast.While (e, b) -> While (desugar_expr st e, desugar_stmt st b)
+    | Ast.If (e, s1, s2) -> If (desugar_expr st e, desugar_stmt st s1, desugar_stmt st s2)
+
 let desugar_decl = function
     | Ast.VDecl {Ast.vtyp = vtyp; vname = vname; vvalue = vvalue} -> raise Unimplemented
     | Ast.FDecl {Ast.ftyp = ftyp; fname = fname; formals = formals; fbody = fbody} -> raise Unimplemented

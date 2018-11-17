@@ -42,6 +42,7 @@ type expr =
 | IntLit of int 
 | BoolLit of bool 
 | Id of string
+[@@deriving show]
 
 type actuals = 
 | ActualsList of actuals

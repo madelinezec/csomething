@@ -35,39 +35,13 @@ type variabledeclarationlist =
 
 (*expr -> T E* *)
 type expr = 
-| Expression of t * eprime 
-[@@deriving show]
-
-and  f = 
-| ExpressionParen of expr
-(* temporary fix *)
-| Literal of string 
+| Add of expr * expr
+| Minus of expr * expr
+| Times of expr * expr
+| Divide of expr * expr
+| IntLit of int 
 | BoolLit of bool 
 | Id of string
-[@@deriving show]
-
-(*T* -> TIMES F T* 
-T* -> / F T* 
-T* -> ε*)
-and tprime = 
-| Divide of f * tprime 
-| Times of f * tprime
-| TPempty
-[@@deriving show]
-
-(*T -> F T*)
-and t = 
-| F of f * tprime
-[@@deriving show]
-
-(*E* -> + T E* 
-E* -> - T E* 
-E* -> ε  *)
-and eprime = 
-| Add of t * eprime
-| Minus of t * eprime
-| EPrimeEmpty
-[@@deriving show]
 
 type actuals = 
 | ActualsList of actuals

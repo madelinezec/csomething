@@ -109,28 +109,22 @@ let rec parseVdeclList tokenlist =
         raise (Syntax_error err_msg)
 
 
-(* expr = T EPRIME
-*)
-let rec parseExpr tokenlist =
-    match tokenlist.head with 
-    | Lexer.LeftParens -> let (tokenlist_t, t_expr) = parseT tokenlist  in 
-                  let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
-                  (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | Lexer.Numeral str -> let (tokenlist_t, t_expr) = tokenlist |> parseT in 
-                  let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
-                  (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | Lexer.True -> let (tokenlist_t, t_expr) = tokenlist |> parseT in 
-                  let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
-                  (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | Lexer.False -> let (tokenlist_t, t_expr) = tokenlist |> parseT in 
-                  let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
-                  (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | Lexer.ID identifier -> let (tokenlist_t, t_expr) = tokenlist |> parseT in 
-                  let (tokenlist_e, e_expr) = parseEPrime tokenlist_t in
-                  (tokenlist_e, Ast.Expression(t_expr, e_expr))
-    | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
-          raise (Syntax_error err_msg)
+(* expr = T EPRIME*)
+let parseExpr tokenlist = 
+    let (lhs, tokenlist_t) = parseT tokenlist in 
+    parseExprPrime lhs tokenlist_t 
 
+
+ (*expr_prime = E* -> + T E* 
+E* -> - T E* 
+E* -> ε
+*)
+and parseExprPrime lhs tokenlist = match tokenlist.lookahead with 
+| PLUS -> let (rhs, tokenlist_rhs) = next tokenlist |> parseT in 
+           parseExprPrime(tokenlist_rhs, (Add (lhs, rhs)))
+| Minus -> let (rhs, tokenlist_rhs) = next tokenlist |> parseT in 
+           parseExprPrime(tokenlist_rhs, (Minus (lhs, rhs)))
+| _ -> tokenlist, lhs
 (* F -> LPAREN E RPAREN 
 F -> int_literal 
 F -> TRUE 
@@ -143,7 +137,7 @@ and parseF tokenlist =
                         let tokenlist_expr_next = next tokenlist_expr in
                           begin
                           match tokenlist_expr_next.head with 
-                          | Lexer.RightParens -> (next tokenlist_expr_next, Ast.ExpressionParen(expr))
+                          | Lexer.RightParens -> (next tokenlist_expr_next, expr)
                           | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
                                 raise (Syntax_error err_msg)
                           end
@@ -159,22 +153,13 @@ and parseF tokenlist =
 T* -> / F T* 
 T* -> ε *)
 
-and parseTprime tokenlist = 
-  begin
-  match  tokenlist.head with
-  | Lexer.Multiply -> let (tokenlist_f, expr_f) = next tokenlist |> parseF in 
-                let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
-                (tokenlist_tprime, Ast.Times(expr_f, expr_tprime))
-  | Lexer.Divide -> let (tokenlist_f, expr_f) = next tokenlist |> parseF in 
-                let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
-                (tokenlist_tprime, Ast.Divide(expr_f, expr_tprime))
-  | Lexer.Plus -> (tokenlist, Ast.TPempty)
-  | Lexer.Minus -> (tokenlist, Ast.TPempty)
-  | Lexer.Semicolon -> (tokenlist, Ast.TPempty)
-  | Lexer.RightParens -> (tokenlist, Ast.TPempty)
-  | _-> let err_msg = __LOC__ ^ "Syntax Error: Multiple, divide, plus, minus, Semicolon, RightParens expected but received" ^ show_token_list tokenlist in
-        raise (Syntax_error err_msg)
-  end
+and parseTprime tokenlist lhs = 
+   match  tokenlist.head with
+  | Lexer.Multiply -> let (tokenlist_f, rhs) = next tokenlist |> parseF in 
+  | Lexer.Divide -> let (tokenlist_rhs, rhs) = next tokenlist |> parseF in 
+                    parseTPrime (tokenlist_rhs, Ast.Divide(lhs, rhs))                     
+  | _-> tokenlist, lhs
+
 (* T -> F T* *)
 and parseT tokenlist = 
   begin
@@ -197,22 +182,7 @@ and parseT tokenlist =
   | _-> let err_msg = __LOC__ ^ "Syntax Error: left parens, numeral, true, false, id expected, but received " ^ show_token_list tokenlist in
         raise (Syntax_error err_msg)
   end
-(*expr_prime = E* -> + T E* 
-E* -> - T E* 
-E* -> ε
-*)
-and parseEPrime tokenlist =
-  match tokenlist.head with
-   | Lexer.Plus -> let (tokenlist_t, expr_t) = next tokenlist |> parseT in
-                let (tokenlist_e, expr_eprime) = parseEPrime tokenlist_t in 
-                (tokenlist_e, Ast.Add(expr_t, expr_eprime))
-   | Lexer.Minus -> let (tokenlist_t, expr_t) = next tokenlist |> parseT in
-                let (tokenlist_e, expr_eprime) = parseEPrime tokenlist_t in 
-                (tokenlist_e, Ast.Minus(expr_t, expr_eprime))
-   | Lexer.Semicolon -> (tokenlist, Ast.EPrimeEmpty)
-   | Lexer.RightParens -> (tokenlist,Ast.EPrimeEmpty)
-   | _-> let err_msg = __LOC__ ^ "Syntax Error: plus, minus, Semicolon, right parens expected but received " ^ show_token_list tokenlist in
-         raise (Syntax_error err_msg)
+
 
 (* actuals -> expr actuals | COMMA actuals | epsilon *)
 let rec parseActuals tokenlist = 

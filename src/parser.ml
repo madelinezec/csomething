@@ -110,21 +110,24 @@ let rec parseVdeclList tokenlist =
 
 
 (* expr = T EPRIME*)
-let parseExpr tokenlist = 
-    let (lhs, tokenlist_t) = parseT tokenlist in 
-    parseExprPrime lhs tokenlist_t 
+let rec parseExpr tokenlist = 
+    let (tokenlist_t, lhs) = parseT tokenlist in 
+    parseExprPrime tokenlist_t lhs
 
 
  (*expr_prime = E* -> + T E* 
 E* -> - T E* 
 E* -> ε
 *)
-and parseExprPrime lhs tokenlist = match tokenlist.lookahead with 
-| PLUS -> let (rhs, tokenlist_rhs) = next tokenlist |> parseT in 
-           parseExprPrime(tokenlist_rhs, (Add (lhs, rhs)))
-| Minus -> let (rhs, tokenlist_rhs) = next tokenlist |> parseT in 
-           parseExprPrime(tokenlist_rhs, (Minus (lhs, rhs)))
+and parseExprPrime tokenlist lhs= 
+begin
+  match tokenlist.head with 
+  | Lexer.Plus -> let (tokenlist_rhs, rhs) = next tokenlist |> parseT in 
+                parseExprPrime tokenlist_rhs (Ast.Add(lhs, rhs))
+| Lexer.Minus -> let (tokenlist_rhs, rhs) = next tokenlist |> parseT in 
+           parseExprPrime tokenlist_rhs (Ast.Minus(lhs, rhs))
 | _ -> tokenlist, lhs
+end
 (* F -> LPAREN E RPAREN 
 F -> int_literal 
 F -> TRUE 
@@ -141,7 +144,7 @@ and parseF tokenlist =
                           | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
                                 raise (Syntax_error err_msg)
                           end
-  | Lexer.Numeral str-> (next tokenlist, Ast.Literal(str))
+  | Lexer.Numeral str-> (next tokenlist, Ast.IntLit(str))
   | Lexer.True -> (next tokenlist, Ast.BoolLit(true))
   | Lexer.False -> (next tokenlist, Ast.BoolLit(false))
   | Lexer.ID identifier -> (next tokenlist, Ast.Id(identifier))
@@ -153,32 +156,28 @@ and parseF tokenlist =
 T* -> / F T* 
 T* -> ε *)
 
-and parseTprime tokenlist lhs = 
+and parseTPrime tokenlist lhs = 
    match  tokenlist.head with
-  | Lexer.Multiply -> let (tokenlist_f, rhs) = next tokenlist |> parseF in 
+  | Lexer.Multiply -> let (tokenlist_rhs, rhs) = next tokenlist |> parseF in 
+                      parseTPrime tokenlist_rhs (Ast.Times(lhs, rhs))
   | Lexer.Divide -> let (tokenlist_rhs, rhs) = next tokenlist |> parseF in 
-                    parseTPrime (tokenlist_rhs, Ast.Divide(lhs, rhs))                     
+                    parseTPrime tokenlist_rhs (Ast.Divide(lhs, rhs))                    
   | _-> tokenlist, lhs
 
 (* T -> F T* *)
 and parseT tokenlist = 
   begin
   match tokenlist.head with 
-  | Lexer.LeftParens -> let (tokenlist_f, expr_f) = parseF tokenlist in 
-                let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
-                (tokenlist_tprime, Ast.F(expr_f, expr_tprime))
-  | Lexer.Numeral str -> let (tokenlist_f, expr_f) = parseF tokenlist in 
-                let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
-                (tokenlist_tprime, Ast.F(expr_f, expr_tprime))
-  | Lexer.True -> let (tokenlist_f, expr_f) = parseF tokenlist in 
-                let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
-                (tokenlist_tprime, Ast.F(expr_f, expr_tprime))
-  | Lexer.False -> let (tokenlist_f, expr_f) = parseF tokenlist in 
-                let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
-                (tokenlist_tprime, Ast.F(expr_f, expr_tprime))
-  | Lexer.ID identifier -> let (tokenlist_f, expr_f) = parseF tokenlist in 
-                let (tokenlist_tprime, expr_tprime) = parseTprime tokenlist_f in 
-                (tokenlist_tprime, Ast.F(expr_f, expr_tprime))
+  | Lexer.LeftParens -> let (tokenlist_f, lhs) = parseF tokenlist in 
+                         parseTPrime tokenlist_f lhs  
+  | Lexer.Numeral str -> let (tokenlist_f, lhs) = parseF tokenlist in 
+                        parseTPrime tokenlist_f lhs
+  | Lexer.True -> let (tokenlist_f, lhs) = parseF tokenlist in 
+                  parseTPrime tokenlist_f lhs
+  | Lexer.False -> let (tokenlist_f, lhs) = parseF tokenlist in 
+                    parseTPrime tokenlist_f lhs
+  | Lexer.ID identifier -> let (tokenlist_f, lhs) = parseF tokenlist in 
+                        parseTPrime tokenlist_f lhs
   | _-> let err_msg = __LOC__ ^ "Syntax Error: left parens, numeral, true, false, id expected, but received " ^ show_token_list tokenlist in
         raise (Syntax_error err_msg)
   end

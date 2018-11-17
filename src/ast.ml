@@ -39,11 +39,11 @@ type expr =
 | Minus of expr * expr
 | Times of expr * expr
 | Divide of expr * expr
-| IntLit of int 
+(*temporary fix *)
+| IntLit of string 
 | BoolLit of bool 
 | Id of string
 [@@deriving show]
-
 type actuals = 
 | ActualsList of actuals
 | SingleExpression of expr * actuals

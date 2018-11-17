@@ -108,7 +108,8 @@ let rec desugar_stmt (st : symbol symbol_table ref) = function
                 | None ->  default_value vd.Ast.vtyp
             end in
         Expr (desugar_expr st (Ast.Assign (Ast.Id vd.Ast.vname, value)))
-
+    | Ast.If (e, s1, s2) -> If (desugar_expr st e, desugar_stmt st s1, desugar_stmt st s2) 
+    | Ast.While (e, s) -> While (desugar_expr st e, desugar_stmt st s)
         
 let desugar_decl = function
     | Ast.VDecl {Ast.vtyp = vtyp; vname = vname; vvalue = vvalue} -> raise Unimplemented

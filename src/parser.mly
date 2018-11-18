@@ -1,4 +1,4 @@
-%{
+%
 open Ast
 %}
 
@@ -38,7 +38,19 @@ decl:
     | vdecl { VDecl $1 }
     | fdecl { FDecl $1 }
 
+arraylit:
+         LBRACE exprlist RBRACE{VecLit $2}
 
+exprlist:
+         expr{[$1]}
+        |expr COMMA exprlist{$1::$3}
+        
+matlit:
+       LBRACE exprlistlist RBRACE(MatLit $2}
+
+exprlistlist:
+             exprlist{[$1]}
+	    |exprlist COMMA exprlist{$1::$3} 
 fdecl:
    typ ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
      { { ftyp = $1;
@@ -114,7 +126,8 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
-
+  | expr LBRACKET expr RBRACKET { SingleIndex($1,$3)}
+  | expr LBRACKET expr RBRACKET LBRACKET expr RBRACKET { DoubleIndex($1,$3,$6)}
 actuals_opt:
     /* nothing */ { [] }
   | actuals_list  { List.rev $1 }

@@ -6,8 +6,8 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 type uop = Neg | Not
 
 type typ = 
-    | Int | Bool | Void | Mat | Float
-    | Vec of typ * int
+    | Int | Bool | Void | Mat | Vec | Float
+    | RealVec of typ * int
     | RealMat of typ * int * int
     [@@deriving show]
 
@@ -23,6 +23,8 @@ type expr =
   | Unop of uop * expr
   | Assign of expr * expr
   | Call of string * expr list
+  | SingleIndex of expr * expr
+  | DoubleIndex of expr * expr * expr
   | Noexpr (*empty*)
 
 type var_decl = {
@@ -81,7 +83,7 @@ let rec string_of_typ = function
   | Void -> "void"
   | Mat -> "mat"
   | Float -> "float"
-  | Vec (t, s) -> string_of_typ t ^ "[" ^ string_of_int s ^ "]"
+  | RealVec (t, s) -> string_of_typ t ^ "[" ^ string_of_int s ^ "]"
   | RealMat (t, s1, s2) ->
           string_of_typ t ^ "[" ^ string_of_int s1 ^ ", " ^ string_of_int s2 ^ "]"
 

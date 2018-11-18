@@ -17,6 +17,8 @@ type expr =
     Literal of int
   | Number of float
   | BoolLit of bool
+  | VecLit of expr list
+  | MatLit of expr list list
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of expr * expr
@@ -64,14 +66,16 @@ let desugar_for : Ast.stmt -> Ast.stmt = function
         let loop = Ast.While(e2, Ast.Block (body :: [Ast.Expr e3])) in
         Ast.While(e1, loop)
     | _ -> raise DesugaringBug
-        
+
+
 let desugar_typ : Ast.typ -> typ = function
     | Ast.Int -> Int
     | Ast.Bool -> Bool
     | Ast.Void -> Void
     | Ast.Mat -> Mat
+    | Ast.Vec -> Vec
     | Ast.Float -> Float
-    | Ast.Vec _ -> Vec
+    | Ast.RealVec _ -> Vec
     | Ast.RealMat _ -> Mat
 
 let rec desugar_expr (st : symbol symbol_table ref) = function
@@ -96,8 +100,21 @@ let rec desugar_expr (st : symbol symbol_table ref) = function
         end in
         Call(sym, List.map (desugar_expr st) li)
     | Ast.Noexpr -> Noexpr
+    | Ast.VecLit xs -> VecLit (List.map (desugar_expr st) xs)
+    | Ast.MatLit xs -> MatLit (List.map (function x -> List.map (desugar_expr st) x) xs) 
 
-let default_value : Ast.typ -> Ast.expr = function _ -> raise Unimplemented
+let rec repeat x n =
+    if n == 0 then []
+    else x :: repeat x (n - 1)
+
+let rec default_value : Ast.typ -> Ast.expr = function
+    | Ast.Int -> Ast.Literal 0
+    | Ast.Bool -> Ast.BoolLit false
+    | Ast.Void -> raise Unimplemented
+    | Ast.Float -> Ast.Number 0.0
+    | Ast.RealVec (t, len) -> Ast.VecLit (repeat (default_value t) len) 
+    | Ast.RealMat (t, l1, l2) -> Ast.MatLit (repeat (repeat (default_value t) l1) l2)
+    | _ -> raise Unimplemented
 
 let rec desugar_stmt (st : symbol symbol_table ref) = function
     | Ast.Block li ->

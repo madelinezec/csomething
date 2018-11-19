@@ -23,3 +23,5 @@ object (self)
         Hashtbl.iter print_one htable;
         print_endline "-------------"
 end
+
+let pp_symbol_table _ _ _ = "<opaque>"

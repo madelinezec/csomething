@@ -10,8 +10,10 @@ type symbol =
     [@@deriving show]
 
 type op = Ast.op
+[@@deriving show]
 
 type uop = Ast.uop
+[@@deriving show]
 
 type expr =
     Literal of int
@@ -22,38 +24,45 @@ type expr =
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of expr * expr
-  | SingleIndex of expr * int
-  | DoubleIndex of expr * int * int
+  | SingleIndex of expr * expr
+  | DoubleIndex of expr * expr * expr
   | SymRefVar of symbol
   | Call of symbol * expr list
   | Noexpr
-
-type stmt =
-    Block of symbol symbol_table ref * stmt list
-  | Expr of expr
-  | DeclStmt of Ast.var_decl
-  | Return of expr
-  | If of expr * stmt * stmt
-  | While of expr * stmt
-
-type func_decl = {
-    ftyp : typ;
-    fname : string;
-    formals : Ast.var_decl list;
-    fbody : symbol symbol_table * stmt list;
-}
+  [@@deriving show]
 
 type var_decl = {
     vtyp : typ;
     vname : string;
     vvalue : expr 
 }
+[@@deriving show]
 
-type decl =
+type stmt =
+    Block of symbol symbol_table ref * stmt list
+  | Expr of expr
+  | DeclStmt of var_decl
+  | Return of expr
+  | If of expr * stmt * stmt
+  | While of expr * stmt
+[@@deriving show]
+
+type func_decl = {
+    ftyp : typ;
+    fname : string;
+    formals : decl list;
+    fbody : symbol symbol_table ref * stmt list;
+}
+[@@deriving show]
+
+and decl =
     | VDecl of var_decl
     | FDecl of func_decl
+    [@@deriving show]
 
-type program = decl list
+type desugared_program = 
+    | Program of decl list * symbol symbol_table ref
+[@@driving show]
 
 exception Unimplemented
 exception DesugaringBug
@@ -102,6 +111,9 @@ let rec desugar_expr (st : symbol symbol_table ref) = function
     | Ast.Noexpr -> Noexpr
     | Ast.VecLit xs -> VecLit (List.map (desugar_expr st) xs)
     | Ast.MatLit xs -> MatLit (List.map (function x -> List.map (desugar_expr st) x) xs) 
+    | Ast.SingleIndex (v, i) -> SingleIndex ((desugar_expr st v), (desugar_expr st i))
+    | Ast.DoubleIndex (v, i, j)
+        -> DoubleIndex ((desugar_expr st v), (desugar_expr st i), (desugar_expr st j))
 
 let rec repeat x n =
     if n == 0 then []
@@ -137,10 +149,20 @@ let rec desugar_stmt (st : symbol symbol_table ref) = function
     | Ast.While (e, b) -> While (desugar_expr st e, desugar_stmt st b)
     | Ast.If (e, s1, s2) -> If (desugar_expr st e, desugar_stmt st s1, desugar_stmt st s2)
 
-let desugar_decl = function
-    | Ast.VDecl {Ast.vtyp = vtyp; vname = vname; vvalue = vvalue} -> raise Unimplemented
-    | Ast.FDecl {Ast.ftyp = ftyp; fname = fname; formals = formals; fbody = fbody} -> raise Unimplemented
+let rec desugar_decl st = function
+    | Ast.VDecl {Ast.vtyp = vtyp; vname = vname; vvalue = vvalue} ->
+        let new_value = begin match vvalue with
+            | Some v -> v
+            | None -> default_value vtyp
+        end in
+        VDecl {vtyp = desugar_typ vtyp; vname = vname; vvalue = desugar_expr st new_value }
+    | Ast.FDecl {Ast.ftyp = ftyp; fname = fname; formals = formals; fbody = fbody} ->
+        let new_ref = ref @@ new symbol_table (Some st) show_symbol in
+        let new_formals = List.map (desugar_decl st) (List.map (function x -> Ast.VDecl x) formals) in
+        let new_body = List.map (desugar_stmt new_ref) fbody in 
+        FDecl {ftyp = desugar_typ ftyp; fname = fname; formals = new_formals; fbody = (new_ref, new_body)}
 
-let rec desugar_program : Ast.program -> program = function
-    | [] -> []
-    | x :: xs -> desugar_decl x :: desugar_program xs
+let rec desugar_program (st: symbol symbol_table ref) : Ast.program -> desugared_program = function
+    | [] -> Program ([], st)
+    | x :: xs -> match desugar_program st xs with
+        | Program (res, st) -> Program (desugar_decl st x :: res, st)

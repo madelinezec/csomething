@@ -2,8 +2,10 @@
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
           And | Or
+          [@@deriving show]
 
 type uop = Neg | Not
+[@@deriving show]
 
 type typ = 
     | Int | Bool | Void | Mat | Vec | Float

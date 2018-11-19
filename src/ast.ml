@@ -78,30 +78,43 @@ let string_of_uop = function
 
 
 let rec string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
-  | Void -> "void"
-  | Mat -> "mat"
-  | Float -> "float"
-  | RealVec (t, s) -> string_of_typ t ^ "[" ^ string_of_int s ^ "]"
-  | RealMat (t, s1, s2) ->
-          string_of_typ t ^ "[" ^ string_of_int s1 ^ ", " ^ string_of_int s2 ^ "]"
-
+    | Int -> "int"
+    | Bool -> "bool"
+    | Void -> "void"
+    | Mat -> "mat"
+    | Float -> "float"
+    | RealVec (t, s) -> string_of_typ t ^ "[" ^ string_of_int s ^ "]"
+    | RealMat (t, s1, s2) ->
+        string_of_typ t ^ "[" ^ string_of_int s1 ^ ", " ^ string_of_int s2 ^ "]"
+    | Vec -> "vec"
+ 
 exception UnexpectedAstEntry of expr
 
-let rec string_of_expr = function
-    Literal(l) -> string_of_int l
-  | Number(l) -> string_of_float l
-  | BoolLit(true) -> "true"
-  | BoolLit(false) -> "false"
-  | Id(s) -> s
-  | Binop(e1, o, e2) ->
-      string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
-  | Unop(o, e) -> string_of_uop o ^ string_of_expr e
-  | Assign(v, e) -> string_of_expr v ^ " = " ^ string_of_expr e
-  | Call(f, el) ->
-      f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-  | Noexpr -> ""
+let rec string_of_expr_list xs =
+    "{" ^ String.concat ", " (List.map string_of_expr xs) ^ "}"
+
+and string_of_expr_list_list xs =
+    "{" ^ String.concat "," (List.map string_of_expr_list xs) ^ "}"
+
+and string_of_expr = function
+    | Literal(l) -> string_of_int l
+    | Number(l) -> string_of_float l
+    | BoolLit(true) -> "true"
+    | BoolLit(false) -> "false"
+    | Id(s) -> s
+    | Binop(e1, o, e2) ->
+        string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
+    | Unop(o, e) -> string_of_uop o ^ string_of_expr e
+    | Assign(v, e) -> string_of_expr v ^ " = " ^ string_of_expr e
+    | Call(f, el) ->
+        f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+    | SingleIndex (v, i) ->
+        string_of_expr v ^ "[" ^ string_of_expr i ^ "]"
+    | DoubleIndex (v, i1, i2) ->
+        string_of_expr v ^ "[" ^ string_of_expr i1 ^ "][" ^ string_of_expr i2 ^ "]"
+    | MatLit xs -> string_of_expr_list_list xs
+    | VecLit xs -> string_of_expr_list xs
+    | Noexpr -> ""
 
 and string_of_var_decl vd = 
     let decl_Str = string_of_typ vd.vtyp ^ " " ^ vd.vname in

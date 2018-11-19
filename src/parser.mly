@@ -1,4 +1,4 @@
-%
+%{
 open Ast
 %}
 
@@ -46,11 +46,11 @@ exprlist:
         |expr COMMA exprlist{$1::$3}
         
 matlit:
-       LBRACE exprlistlist RBRACE(MatLit $2}
+       LBRACE exprlistlist RBRACE {MatLit $2}
 
 exprlistlist:
              exprlist{[$1]}
-	    |exprlist COMMA exprlist{$1::$3} 
+	    |exprlist COMMA exprlistlist{$1::$3} 
 fdecl:
    typ ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
      { { ftyp = $1;
@@ -72,7 +72,7 @@ typ:
   | VOID { Void }
   | MAT { Mat }
   | FLOAT { Float }
-  | typ LBRACKET LITERAL RBRACKET { Vec($1, $3) }
+  | typ LBRACKET LITERAL RBRACKET { RealVec($1, $3) }
   | typ LBRACKET LITERAL COMMA LITERAL RBRACKET { RealMat($1, $3, $5) }
 
 vdecl_list:
@@ -109,6 +109,8 @@ expr:
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | ID               { Id($1) }
+  | matlit           { $1 }
+  | arraylit         { $1 } 
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
   | expr TIMES  expr { Binop($1, Mult,  $3) }

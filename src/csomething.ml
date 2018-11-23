@@ -17,7 +17,7 @@ let _ =
         begin match desugared with
             | Semantics.Program (x, st) ->
                 ignore (List.map print_endline (List.map Semantics.show_decl x));
-                Symbol.pp_symbol_table None None !st;
+                Codegen.codegen_program (Semantics.Program (x, st))
         end
     with
         e -> print_position stderr lexbuf

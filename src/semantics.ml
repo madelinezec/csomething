@@ -70,6 +70,12 @@ exception UnknownIdentifier of string
 exception FunctionNameAsId of string
 exception CallingAnId of string
 
+let get_formals_type decls =
+    let get_decl_type = function
+        | FDecl _ -> raise Unimplemented
+        | VDecl {vtyp = this_typ} -> this_typ in
+    List.map get_decl_type decls
+
 let desugar_for : Ast.stmt -> Ast.stmt = function
     | Ast.For (e1, e2, e3, body) ->
         let loop = Ast.While(e2, Ast.Block (body :: [Ast.Expr e3])) in

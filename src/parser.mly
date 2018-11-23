@@ -38,6 +38,7 @@ decl:
     | vdecl { VDecl $1 }
     | fdecl { FDecl $1 }
 
+
 arraylit:
          LBRACE exprlist RBRACE{VecLit $2}
 
@@ -45,12 +46,6 @@ exprlist:
          expr{[$1]}
         |expr COMMA exprlist{$1::$3}
         
-matlit:
-       LBRACE exprlistlist RBRACE {MatLit $2}
-
-exprlistlist:
-             exprlist{[$1]}
-	    |exprlist COMMA exprlistlist{$1::$3} 
 fdecl:
    typ ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
      { { ftyp = $1;
@@ -109,7 +104,6 @@ expr:
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | ID               { Id($1) }
-  | matlit           { $1 }
   | arraylit         { $1 } 
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }

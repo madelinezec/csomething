@@ -17,11 +17,12 @@ object (self)
                     | None -> None
 
 
-    method debug_dump : unit =
+    method debug_dump : string =
+        let ref_list = ref [] in
         let print_one name sym =
-            print_endline (name ^ ": " ^ printer sym) in
-        Hashtbl.iter print_one htable;
-        print_endline "-------------"
+            ref_list := (name ^ ": " ^ printer sym) :: !ref_list in
+        let _ = Hashtbl.iter print_one htable in
+        String.concat "\n" (List.rev !ref_list)
 end
 
-let pp_symbol_table _ _ _ = "<opaque>"
+let pp_symbol_table _ _ ht = print_endline ht#debug_dump

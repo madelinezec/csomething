@@ -1,4 +1,6 @@
+int test = 1000;
 int main(){
+    test = 1001;
     int b;
     bool foo;
     float d;
@@ -11,6 +13,8 @@ int main(){
     a = 1;
     f[3][4] = 5;
     if (a == d) {
+        int c = 0;
+        main();
         a = a + d;
         d = a + foo;
     }

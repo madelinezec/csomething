@@ -14,8 +14,10 @@ let _ =
         let ast = Parser.program Scanner.token lexbuf in
         print_string (Ast.string_of_program ast);
         let desugared = Semantics.desugar_program (ref @@ new Symbol.symbol_table None Semantics.show_symbol) ast in
-        ignore  begin match desugared with
-            | Semantics.Program (x, _) -> List.map print_endline (List.map Semantics.show_decl x)
+        begin match desugared with
+            | Semantics.Program (x, st) ->
+                ignore (List.map print_endline (List.map Semantics.show_decl x));
+                Symbol.pp_symbol_table None None !st;
         end
     with
         e -> print_position stderr lexbuf

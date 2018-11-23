@@ -16,13 +16,20 @@ object (self)
                     | Some r -> !r#find name
                     | None -> None
 
-
     method debug_dump : string =
         let ref_list = ref [] in
         let print_one name sym =
             ref_list := (name ^ ": " ^ printer sym) :: !ref_list in
         let _ = Hashtbl.iter print_one htable in
         String.concat "\n" (List.rev !ref_list)
+
+    method set_parent (p : 't symbol_table ref option) =
+        _parent = p
+
+        
+    method map_curr_level mapper : unit =
+        Hashtbl.iter mapper htable;
+
 end
 
 let pp_symbol_table _ _ ht = print_endline ht#debug_dump

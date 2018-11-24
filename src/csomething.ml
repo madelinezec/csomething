@@ -1,4 +1,4 @@
-let in_channel = open_in "tests/test.cst"
+let in_channel = open_in Sys.argv.(1)
 
 open Lexing
 
@@ -9,6 +9,7 @@ let print_position outx lexbuf =
 
 
 let _ =   
+    Printexc.record_backtrace true;
     let lexbuf = Lexing.from_channel in_channel in
     try
         let ast = Parser.program Scanner.token lexbuf in
@@ -20,5 +21,6 @@ let _ =
                 Codegen.codegen_program (Semantics.Program (x, st))
         end
     with
-        e -> print_position stderr lexbuf
+        e ->
+            raise e
 

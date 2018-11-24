@@ -2,6 +2,12 @@ open Semantics
 open Symbol
 module L = Llvm
 
+exception CodegenTODO
+exception CodegenUndefinedVar of string
+exception CodegenUndefinedFunc of string
+exception CodegenNotAnLValue of expr
+exception CodegenBug
+
 (* in charge of allocating expression internal temp variables *)
 let temp_pool = ref 0
 
@@ -81,13 +87,19 @@ let codegen_allocate_var builder old_st new_st =
         | SymVar {sv_name = name; sv_typ = typ; } ->
             let new_var = L.build_alloca (get_type typ) name builder in
             !new_st#add name new_var
-        | _ -> raise Unimplemented
+        | _ -> raise CodegenBug
     end in
     !old_st#map_curr_level allocate_one
 
-exception CodegenUndefinedVar of string
-exception CodegenUndefinedFunc of string
-exception CodegenNotAnLValue of expr
+let codegen_ptr builder st : expr -> L.llvalue = function
+    | SymRefVar (SymVar {sv_name = name }) ->
+        begin match !st#find name with
+                | None -> raise (CodegenUndefinedVar name)
+                | Some v -> v
+        end
+    | SingleIndex (v, i) -> raise CodegenTODO
+    | DoubleIndex (v, i, j) -> raise CodegenTODO
+    | _ -> raise CodegenBug
 
 let rec codegen_expr builder st : expr -> L.llvalue = function
     | Literal _ as c -> codegen_const c
@@ -98,13 +110,10 @@ let rec codegen_expr builder st : expr -> L.llvalue = function
     | Binop _ as b -> codegen_binop builder st b
     | Unop _ as u -> codegen_unop builder st u 
     | Assign _ as a -> codegen_assign builder st a 
-    | SymRefVar (SymVar {sv_name = name}) ->
-        let var = begin match !st#find name with
-            | None -> raise (CodegenUndefinedVar name)
-            | Some v -> v
-        end in
+    | SymRefVar (SymVar _) as ptr ->
+        let var = codegen_ptr builder st ptr in  
         L.build_load var (get_temp) builder 
-    | SymRefVar _ -> raise Unimplemented
+    | SymRefVar _ -> raise CodegenBug
     | Call (SymFun {sf_name = name}, args) ->
         let func = begin match !st#find name with
             | None -> raise (CodegenUndefinedFunc name)
@@ -112,24 +121,16 @@ let rec codegen_expr builder st : expr -> L.llvalue = function
         end in
         let ll_args = Array.of_list (List.map (codegen_expr builder st) args) in
         L.build_call func ll_args (get_temp) builder
-    | _ -> raise Unimplemented
+    | _ -> raise CodegenTODO
 
-and codegen_binop builder st = raise Unimplemented
-and codegen_unop builder st = raise Unimplemented
+and codegen_binop builder st = raise CodegenTODO
+and codegen_unop builder st = raise CodegenTODO
 and codegen_assign builder st = function
-    | Assign (e1, e2) -> begin match e1 with
-        | SingleIndex _ -> raise Unimplemented
-        | DoubleIndex _ -> raise Unimplemented
-        | SymRefVar (SymVar {sv_name = name}) ->
-            let var = begin match !st#find name with
-                | None -> raise (CodegenUndefinedVar name)
-                | Some v -> v
-            end in
-            let rhs = codegen_expr builder st e2 in
-            L.build_store rhs var builder
-        | x -> raise (CodegenNotAnLValue x)
-        end
-    | _ -> raise Unimplemented
+    | Assign (e1, e2) ->
+        let var = codegen_ptr builder st e1 in
+        let rhs = codegen_expr builder st e2 in
+        L.build_store rhs var builder
+    | _ -> raise CodegenBug
 
 let rec codegen_stmt builder st = function
     | Block (old_st, stmts) ->
@@ -155,8 +156,8 @@ let rec codegen_stmt builder st = function
         ignore @@ L.build_br merge_bb (L.builder_at_end context else_bb);
         ignore @@ L.build_cond_br cond_val then_bb else_bb (L.builder_at_end context start_bb);
         L.position_at_end merge_bb builder
-    | While _ -> raise Unimplemented
-    | _ -> raise Unimplemented
+    | While _ -> raise CodegenTODO
+    | _ -> raise CodegenBug
 
 let codegen_global_decl st = function
     | VDecl {vtyp = vtyp; vname = vname; vvalue = vvalue} ->

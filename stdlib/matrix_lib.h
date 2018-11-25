@@ -59,4 +59,25 @@ int *get_index_vec_int(struct vector *v, size_t i);
 
 float *get_index_vec_float(struct vector *v, size_t i);
 
+
+/* the following are linear algebra operations */
+
+void addition_mat_int(struct matrix *dest, struct matrix *arg1, struct matrix *arg2);
+void addition_mat_float(struct matrix *dest, struct matrix *arg1, struct matrix *arg2);
+void addition_vec_int(struct vector *dest, struct vector *arg1, struct vector *arg2);
+void addition_vec_float(struct vector *dest, struct vector *arg1, struct vector *arg2);
+
+void scalar_product_mat_int(struct matrix *dest, int arg1, struct matrix *arg2);
+void scalar_product_mat_float(struct matrix *dest, int arg1, struct matrix *arg2);
+void scalar_product_vec_int(struct vector *dest, int arg1, struct vector *arg2);
+void scalar_product_vec_float(struct vector *dest, int arg1, struct vector *arg2);
+
+void mat_product_int(struct matrix *dest, struct matrix *arg1, struct matrix *arg2);
+void mat_product_float(struct matrix *dest, struct matrix *arg1, struct matrix *arg2);
+
+void mat_inv_int(struct matrix *dest, struct matrix *src);
+void mat_inv_float(struct matrix *dest, struct matrix *src);
+
+// more operations to follow
+
 #endif

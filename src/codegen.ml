@@ -84,9 +84,12 @@ let rec codegen_const = function
 
 let codegen_allocate_var builder old_st new_st =
     let allocate_one _ = begin function
-        | SymVar {sv_name = name; sv_typ = typ; } ->
-            let new_var = L.build_alloca (get_type typ) name builder in
-            !new_st#add name new_var
+        | SymVar {sv_name = name; sv_typ = typ; sv_is_func_arg = is_func_arg } ->
+            if not is_func_arg then
+                let new_var = L.build_alloca (get_type typ) name builder in
+                !new_st#add name new_var
+            else
+                ()
         | _ -> raise CodegenBug
     end in
     !old_st#map_curr_level allocate_one
@@ -128,24 +131,27 @@ and codegen_binop builder st = function
        let expr1' = codegen_expr builder st expr1
        and expr2' = codegen_expr builder st expr2 in 
        (match op with
-       | Add -> L.build_add
-       | Sub -> L.build_sub
-       | Mult -> L.build_mul
-       | Div -> L.build_sdiv
-       | Equal -> L.build_icmp L.Icmp.Eq
-       | Neq -> L.build_icmp L.Icmp.Ne
-       | Less -> L.build_icmp L.Icmp.Slt
-       | Leq -> L.build_icmp L.Icmp.Sle
-       | Greater -> L.build_icmp L.Icmp.Sgt
-       | Geq -> L.build_icmp L.Icmp.Sge
-       | And -> L.build_and 
-       | Or -> L.build_or
+       | Ast.Add -> L.build_add
+       | Ast.Sub -> L.build_sub
+       | Ast.Mult -> L.build_mul
+       | Ast.Div -> L.build_sdiv
+       | Ast.Equal -> L.build_icmp L.Icmp.Eq
+       | Ast.Neq -> L.build_icmp L.Icmp.Ne
+       | Ast.Less -> L.build_icmp L.Icmp.Slt
+       | Ast.Leq -> L.build_icmp L.Icmp.Sle
+       | Ast.Greater -> L.build_icmp L.Icmp.Sgt
+       | Ast.Geq -> L.build_icmp L.Icmp.Sge
+       | Ast.And -> L.build_and 
+       | Ast.Or -> L.build_or
        ) expr1' expr2' "tmp" builder
+    | _ -> raise CodegenBug
 and codegen_unop builder st = function
     | Unop(op, expr1) -> let expr1' = codegen_expr builder st expr1 in
         (match op with
-        | Neq -> L.build_neg
-        | Not -> L.build_not) expr1' "tmp" builder
+        | Ast.Neg -> L.build_neg
+        | Ast.Not -> L.build_not) expr1' "tmp" builder
+    | _ -> raise CodegenBug
+
 and codegen_assign builder st = function
     | Assign (e1, e2) ->
         let var = codegen_ptr builder st e1 in
@@ -180,6 +186,18 @@ let rec codegen_stmt builder st = function
     | While _ -> raise CodegenTODO
     | _ -> raise CodegenBug
 
+let codegen_allocate_args builder st func formals =
+    let bind ll_param decl =
+        let name, typ = begin match decl with
+            | VDecl {vname = name; vtyp = typ} -> (name, typ)
+            | _ -> raise CodegenBug
+        end in
+        let arg = L.build_alloca (get_type typ) name builder in
+        ignore @@ L.build_store ll_param arg builder;
+        !st#add name arg;
+    in
+    List.iter2 bind (Array.to_list (L.params func)) formals 
+
 let codegen_global_decl st = function
     | VDecl {vtyp = vtyp; vname = vname; vvalue = vvalue} ->
         let init = codegen_const vvalue in
@@ -194,6 +212,7 @@ let codegen_global_decl st = function
         !st#add fname sym;
         let func_st = ref @@ new symbol_table (Some st) print_val in
         let builder = L.builder_at_end context (L.entry_block sym) in
+        codegen_allocate_args builder func_st sym formals;
         codegen_allocate_var builder old_st func_st;
         ignore @@ List.map (codegen_stmt builder func_st) stmts;
         sym

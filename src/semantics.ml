@@ -5,7 +5,7 @@ type typ =
     [@@deriving show]
 
 type symbol =
-    | SymVar of {sv_name : string; sv_typ : typ; sv_is_temp : bool; sv_is_global : bool; mutable sv_ref : int }
+    | SymVar of {sv_name : string; sv_typ : typ; sv_is_temp : bool; sv_is_func_arg : bool; sv_is_global : bool; mutable sv_ref : int }
     | SymFun of {sf_name : string; sf_rtyp : typ; sf_args : typ list; mutable sf_ref : int}
     [@@deriving show]
 
@@ -142,7 +142,7 @@ let rec desugar_stmt (st : symbol symbol_table ref) = function
     | Ast.Expr e -> Expr (desugar_expr st e)
     | Ast.DeclStmt vd ->
         let new_symbol =
-            SymVar {sv_name = vd.Ast.vname; sv_typ = desugar_typ vd.Ast.vtyp; sv_is_temp = false; sv_is_global = false; sv_ref = 0} in
+            SymVar {sv_name = vd.Ast.vname; sv_typ = desugar_typ vd.Ast.vtyp; sv_is_func_arg = false; sv_is_temp = false; sv_is_global = false; sv_ref = 0} in
         !st#add vd.Ast.vname new_symbol;
         let value = 
             begin match vd.Ast.vvalue with
@@ -155,9 +155,21 @@ let rec desugar_stmt (st : symbol symbol_table ref) = function
     | Ast.While (e, b) -> While (desugar_expr st e, desugar_stmt st b)
     | Ast.If (e, s1, s2) -> If (desugar_expr st e, desugar_stmt st s1, desugar_stmt st s2)
 
+
+let desugar_func_arg st = function
+    | Ast.VDecl {Ast.vtyp = vtyp; vname = vname; vvalue = vvalue} ->
+        let sym = SymVar {sv_name = vname; sv_typ = desugar_typ vtyp; sv_is_func_arg = true; sv_is_temp = false; sv_is_global = true; sv_ref = 0} in
+        !st#add vname sym;
+        let new_value = begin match vvalue with
+            | Some v -> v
+            | None -> default_value vtyp
+        end in
+        VDecl {vtyp = desugar_typ vtyp; vname = vname; vvalue = desugar_expr st new_value }
+    | _ -> raise DesugaringBug
+
 let rec desugar_decl st = function
     | Ast.VDecl {Ast.vtyp = vtyp; vname = vname; vvalue = vvalue} ->
-        let sym = SymVar {sv_name = vname; sv_typ = desugar_typ vtyp; sv_is_temp = false; sv_is_global = true; sv_ref = 0} in
+        let sym = SymVar {sv_name = vname; sv_typ = desugar_typ vtyp; sv_is_func_arg = false; sv_is_temp = false; sv_is_global = true; sv_ref = 0} in
         !st#add vname sym;
         let new_value = begin match vvalue with
             | Some v -> v
@@ -169,7 +181,7 @@ let rec desugar_decl st = function
         let sym = SymFun {sf_name = fname; sf_rtyp = desugar_typ ftyp; sf_args = new_typs; sf_ref = 0} in
         !st#add fname sym;
         let new_ref = ref @@ new symbol_table (Some st) show_symbol in
-        let new_formals = List.map (desugar_decl st) (List.map (function x -> Ast.VDecl x) formals) in
+        let new_formals = List.map (desugar_func_arg new_ref) (List.map (function x -> Ast.VDecl x) formals) in
         let new_body = List.map (desugar_stmt new_ref) fbody in 
         FDecl {ftyp = desugar_typ ftyp; fname = fname; formals = new_formals; fbody = (new_ref, new_body)}
 

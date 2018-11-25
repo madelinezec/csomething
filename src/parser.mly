@@ -35,7 +35,7 @@ decls:
     | decl decls { $1 :: $2 }
 
 decl:
-    | vdecl { VDecl $1 }
+    | vdecl SEMI { VDecl $1 }
     | fdecl { FDecl $1 }
 
 
@@ -72,11 +72,11 @@ typ:
 
 vdecl_list:
     /* nothing */    { [] }
-  | vdecl vdecl_list { $1 :: $2 }
+  | vdecl SEMI vdecl_list { $1 :: $3 }
 
 vdecl:
-    | typ ID SEMI { {vtyp = $1;  vname = $2; vvalue = None} }
-    | typ ID ASSIGN expr SEMI { {vtyp = $1; vname = $2; vvalue = Some $4} }
+    | typ ID { {vtyp = $1;  vname = $2; vvalue = None} }
+    | typ ID ASSIGN expr { {vtyp = $1; vname = $2; vvalue = Some $4} }
 
 stmt_list:
     /* nothing */  { [] }
@@ -84,7 +84,7 @@ stmt_list:
 
 stmt:
     expr SEMI { Expr $1 }
-  | vdecl { DeclStmt $1 } 
+  | vdecl SEMI { DeclStmt $1 } 
   | RETURN SEMI { Return Noexpr }
   | RETURN expr SEMI { Return $2 }
   | LBRACE stmt_list RBRACE { Block($2) }

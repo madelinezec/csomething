@@ -11,12 +11,12 @@ exception CodegenBug
 (* in charge of allocating expression internal temp variables *)
 let temp_pool = ref 0
 
-let get_temp : string =
+let get_temp () : string =
     let ret = Printf.sprintf "_%d" !temp_pool in
     temp_pool := !temp_pool + 1;
     ret
 
-let clear_temp = temp_pool := 0
+let clear_temp () = temp_pool := 0
 
 (* reference: https://www.wzdftpd.net/blog/ocaml-llvm-02.html *)
 let rec print_type llty =
@@ -115,7 +115,7 @@ let rec codegen_expr builder st : expr -> L.llvalue = function
     | Assign _ as a -> codegen_assign builder st a 
     | SymRefVar (SymVar _) as ptr ->
         let var = codegen_ptr builder st ptr in  
-        L.build_load var (get_temp) builder 
+        L.build_load var (get_temp ()) builder 
     | SymRefVar _ -> raise CodegenBug
     | Call (SymFun {sf_name = name}, args) ->
         let func = begin match !st#find name with
@@ -123,7 +123,7 @@ let rec codegen_expr builder st : expr -> L.llvalue = function
             | Some v -> v
         end in
         let ll_args = Array.of_list (List.map (codegen_expr builder st) args) in
-        L.build_call func ll_args (get_temp) builder
+        L.build_call func ll_args (get_temp ()) builder
     | _ -> raise CodegenTODO
 
 and codegen_binop builder st = function
@@ -143,13 +143,13 @@ and codegen_binop builder st = function
        | Ast.Geq -> L.build_icmp L.Icmp.Sge
        | Ast.And -> L.build_and 
        | Ast.Or -> L.build_or
-       ) expr1' expr2' "tmp" builder
+       ) expr1' expr2' (get_temp ()) builder
     | _ -> raise CodegenBug
 and codegen_unop builder st = function
     | Unop(op, expr1) -> let expr1' = codegen_expr builder st expr1 in
         (match op with
         | Ast.Neg -> L.build_neg
-        | Ast.Not -> L.build_not) expr1' "tmp" builder
+        | Ast.Not -> L.build_not) expr1' (get_temp ()) builder
     | _ -> raise CodegenBug
 
 and codegen_assign builder st = function
@@ -182,7 +182,7 @@ let rec codegen_stmt builder st = function
         codegen_stmt (L.builder_at_end context else_bb) st s2;
         ignore @@ L.build_br merge_bb (L.builder_at_end context else_bb);
         ignore @@ L.build_cond_br cond_val then_bb else_bb (L.builder_at_end context start_bb);
-        L.position_at_end merge_bb builder
+        L.position_at_end merge_bb builder;
     | While _ -> raise CodegenTODO
     | _ -> raise CodegenBug
 
@@ -198,6 +198,15 @@ let codegen_allocate_args builder st func formals =
     in
     List.iter2 bind (Array.to_list (L.params func)) formals 
 
+let codegen_func_terminator typ builder =
+    ignore @@ match typ with
+        | Semantics.Void -> L.build_ret_void builder
+        | Semantics.Float -> L.build_ret (L.const_float float_t 0.0) builder
+        | Semantics.Int -> L.build_ret (L.const_int int_t 0) builder
+        | _ -> raise Unimplemented
+
+
+
 let codegen_global_decl st = function
     | VDecl {vtyp = vtyp; vname = vname; vvalue = vvalue} ->
         let init = codegen_const vvalue in
@@ -212,9 +221,11 @@ let codegen_global_decl st = function
         !st#add fname sym;
         let func_st = ref @@ new symbol_table (Some st) print_val in
         let builder = L.builder_at_end context (L.entry_block sym) in
+        clear_temp ();
         codegen_allocate_args builder func_st sym formals;
         codegen_allocate_var builder old_st func_st;
         ignore @@ List.map (codegen_stmt builder func_st) stmts;
+        codegen_func_terminator ftyp builder;
         sym
 
 let codegen_program = function

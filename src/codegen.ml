@@ -123,8 +123,29 @@ let rec codegen_expr builder st : expr -> L.llvalue = function
         L.build_call func ll_args (get_temp) builder
     | _ -> raise CodegenTODO
 
-and codegen_binop builder st = raise CodegenTODO
-and codegen_unop builder st = raise CodegenTODO
+and codegen_binop builder st = function
+    | Binop (expr1, op, expr2) -> 
+       let expr1' = codegen_expr builder st expr1
+       and expr2' = codegen_expr builder st expr2 in 
+       (match op with
+       | Add -> L.build_add
+       | Sub -> L.build_sub
+       | Mult -> L.build_mul
+       | Div -> L.build_sdiv
+       | Equal -> L.build_icmp L.Icmp.Eq
+       | Neq -> L.build_icmp L.Icmp.Ne
+       | Less -> L.build_icmp L.Icmp.Slt
+       | Leq -> L.build_icmp L.Icmp.Sle
+       | Greater -> L.build_icmp L.Icmp.Sgt
+       | Geq -> L.build_icmp L.Icmp.Sge
+       | And -> L.build_and 
+       | Or -> L.build_or
+       ) expr1' expr2' "tmp" builder
+and codegen_unop builder st = function
+    | Unop(op, expr1) -> let expr1' = codegen_expr builder st expr1 in
+        (match op with
+        | Neq -> L.build_neg
+        | Not -> L.build_not) expr1' "tmp" builder
 and codegen_assign builder st = function
     | Assign (e1, e2) ->
         let var = codegen_ptr builder st e1 in

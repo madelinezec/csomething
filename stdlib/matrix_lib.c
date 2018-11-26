@@ -24,12 +24,12 @@ struct vector;
 struct matrix *alloc_mat_int(size_t m, size_t n){
     struct matrix * matrix_ptr = malloc(sizeof (struct matrix));
     if(matrix_ptr == NULL){
-    	return NULL;
+    	exit(-1);
     }
     matrix_ptr->data = malloc(m * n * sizeof(int));
     if(matrix_ptr->data == NULL){
     	free(matrix_ptr);
-    	return NULL;
+    	exit(-1);
     }
     matrix_ptr->type = 0;
     matrix_ptr->m = m; 
@@ -41,12 +41,12 @@ struct matrix *alloc_mat_int(size_t m, size_t n){
 struct matirx *alloc_mat_float(size_t m, size_t n){
     struct matrix * matrix_ptr = malloc(sizeof (struct matrix));
     if(matrix_ptr == NULL){
-    	return NULL;
+    	exit(-1);
     }
     matrix_ptr->data = malloc(m * n * sizeof(float));
     if(matrix_ptr->data == NULL){
     	free(matrix_ptr);
-    	return NULL;
+    	exit(-1);
     }
     matrix_ptr->type = 0;
     matrix_ptr->m = m; 
@@ -58,12 +58,12 @@ struct matirx *alloc_mat_float(size_t m, size_t n){
 struct vector *alloc_vec_int(size_t n){
 	struct vector vector_ptr = malloc(sizeof(struct  vector));
 	if(vector_ptr == NULL){
-		return NULL;
+		exit(-1);
 	}
 	vector_ptr->data = malloc(n * sizeof(int))
 	if(vector_ptr->data == NULL){
 		free(vector_ptr);
-		return NULL;
+		exit(-1);
 	}
 	vector_ptr->n = n;
 	vector_ptr->type = 0;
@@ -73,12 +73,12 @@ struct vector *alloc_vec_int(size_t n){
 struct vector *alloc_vec_float(size_t n){
 	struct vector vector_ptr = malloc(sizeof(struct  vector));
 	if(vector_ptr == NULL){
-		return NULL;
+		exit(-1);
 	}
 	vector_ptr->data = malloc(n * sizeof(float))
 	if(vector_ptr->data == NULL){
 		free(vector_ptr);
-		return NULL;
+		exit(-1);
 	}
 	vector_ptr->n = n;
 	vector_ptr->type = 1;

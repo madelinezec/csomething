@@ -184,6 +184,7 @@ let rec codegen_stmt builder st = function
         ignore @@ L.build_cond_br cond_val then_bb else_bb (L.builder_at_end context start_bb);
         L.position_at_end merge_bb builder;
     | While _ -> raise CodegenTODO
+    | For _ -> raise CodegenTODO
     | _ -> raise CodegenBug
 
 let codegen_allocate_args builder st func formals =

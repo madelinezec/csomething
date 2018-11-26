@@ -66,6 +66,7 @@ struct vector *alloc_vec_int(size_t n){
 		return NULL;
 	}
 	vector_ptr->n = n;
+	vector_ptr->type = 0;
 }
 
 /* allocate an array of floats */
@@ -80,6 +81,7 @@ struct vector *alloc_vec_float(size_t n){
 		return NULL;
 	}
 	vector_ptr->n = n;
+	vector_ptr->type = 1;
 }
 
 /* this should call whatever destructor necessary and call free */

@@ -5,10 +5,10 @@
 #include <stdint.h>
 
 /* read one integer from stdin */
-uint64_t get_int();
+int64_t get_int();
 
 /* write one integer to stdout */
-void put_int(uint64_t);
+void put_int(int64_t);
 
 /* read one float from stdin */
 float get_float(float);

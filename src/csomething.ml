@@ -21,6 +21,5 @@ let _ =
                 Codegen.codegen_program (Semantics.Program (x, st))
         end
     with
-        e ->
-            raise e
+        e -> print_position stderr lexbuf; raise e
 

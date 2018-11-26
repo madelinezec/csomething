@@ -3,8 +3,10 @@
 
 /* read one integer from stdin */
 uint64_t get_int(){
-	char buffer [sizeof(int)];
+	char buffer [BUFSIZ];
 	read(0, buffer, strlen(buffer));
+	
+
 	return buffer;
 }
 
@@ -16,9 +18,31 @@ void put_int(uint64_t){
 
 /* read one float from stdin */
 float get_float(){
-	char buffer [sizeof(float)];
+	char buffer [BUFSIZ];
 	read(0, buffer, strlen(buffer));
-	return buffer;
+	
+	/*source for converting string to float:
+	https://stackoverflow.com/q/4392665/6637004*/
+	const char * s = buffer;
+	float rez = 0, fact = 1;
+  	if (buffer == '-'){
+    	s++;
+    	fact = -1;
+  	};
+  	for(int point_seen = 0; buffer; s++){
+    	if (*s == '.'){
+      		point_seen = 1; 
+      		continue;
+    	}
+    	int d = *s - '0';
+    	if (d >= 0 && d <= 9){
+      		if (point_seen){
+      			fact /= 10.0f;
+      		} 
+      		rez = rez * 10.0f + (float)d;
+  		}
+  	return rez * fact;
+
 }
 
 /* write one float to stdout */
@@ -66,3 +90,4 @@ void put_vec(struct vector *v){
 		write(1, white_space, strlen(white_space));
 	}
 }
+

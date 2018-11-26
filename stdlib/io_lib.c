@@ -3,11 +3,33 @@
 
 /* read one integer from stdin */
 uint64_t get_int(){
-	char buffer [BUFSIZ];
+	char buffer[BUFSIZ];
 	read(0, buffer, strlen(buffer));
 	
-
-	return buffer;
+	/*source for converting string to integer: 
+	https://www.programmingsimplified.com/c/source-code/c-program-convert-string-to-integer-without-using-atoi-function*/
+	if (buffer[0] == '-') {  // Handle negative integers
+    	sign = -1;
+  	}
+ 
+  	if (sign == -1) {  // Set starting position to convert
+    	offset = 1;
+  	}
+  	else {
+    	offset = 0;
+  	}
+ 
+  	n = 0;
+ 
+  	for (c = offset; buffer[c] != '\0'; c++) {
+    	n = n * 10 + buffer[c] - '0';
+  	}
+ 
+  	if (sign == -1) {
+    	n = -n;
+  	}
+ 
+  	return n;
 }
 
 /* write one integer to stdout */
@@ -25,7 +47,7 @@ float get_float(){
 	https://stackoverflow.com/q/4392665/6637004*/
 	const char * s = buffer;
 	float rez = 0, fact = 1;
-  	if (buffer == '-'){
+  	if (*s== '-'){
     	s++;
     	fact = -1;
   	};

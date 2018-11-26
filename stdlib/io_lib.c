@@ -40,14 +40,10 @@ void put_int(int x){
 	int i = 0; 
     while (x) 
     { 
-        printf("i enter here \n");
         str[i] = (x%10) + '0';
         i++;
         x = x/10; 
     } 
-    printf("%s", str);
-    printf("\n");
-    printf("will we ever enter the foor loop \n");
     
     char revstr[i];
     int len = i;
@@ -56,8 +52,8 @@ void put_int(int x){
         i = i- 1;
         revstr[j] = str[i];
     }
-    revstr[len + 1] = '\0'; 
-    write(1, str, sizeof(str));
+    revstr[len] = '\0';
+    write(1, revstr, sizeof(revstr));
     
 }
 
@@ -91,9 +87,16 @@ float get_float(){
 }
 
 /* write one float to stdout */
-void put_float(float){
-	float * ptr = &float;
-	write(1, ptr, sizeof(ptr));
+void put_float(float x){
+ 
+	double integral;
+    float fractional;
+
+    fractional = modf(x, &integral);
+
+	put_int(integral);
+	write(1, ".", strlen("."));
+	put_int(fractional);
 }
 
 /* print a matrix */
@@ -113,7 +116,12 @@ void put_mat(struct matrix* m){
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < columns; j++){
 			offset = i * num_columns + j;
-			write(1, &m->data[offset], size);
+			if(m->type == 0){
+				put_int(&m->data[offset]);
+			}
+			if(m->type == 1){
+				put_float(&m->data[offset]);
+			}
 			write(1, white_space, strlen(white_space));
 		}
 		write(1, new_line, strlen(new_line));
@@ -131,7 +139,12 @@ void put_vec(struct vector *v){
 		size = sizeof(float);
 	}
 	for(int j = 0; j < length; j++){
-		write(1, &m->data[j], size);
+		if(v->type == 0){
+			put_int(&v->data[j]);
+		}
+		if(v->type == 1){
+			put_float(&v->data[j]);
+		}
 		write(1, white_space, strlen(white_space));
 	}
 }

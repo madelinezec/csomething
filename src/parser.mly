@@ -52,6 +52,10 @@ fdecl:
 	 fname = $2;
 	 formals = $4;
 	 fbody = $7 } }
+    | typ ID LPAREN formals_opt RPAREN SEMI
+        {
+            {ftyp = $1; fname = $2; formals = $4; fbody = []}
+        }
 
 formals_opt:
     /* nothing */ { [] }

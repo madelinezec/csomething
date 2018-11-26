@@ -117,13 +117,17 @@ let rec codegen_expr builder st : expr -> L.llvalue = function
         let var = codegen_ptr builder st ptr in  
         L.build_load var (get_temp ()) builder 
     | SymRefVar _ -> raise CodegenBug
-    | Call (SymFun {sf_name = name}, args) ->
+    | Call (SymFun {sf_name = name; sf_rtyp = rtyp}, args) ->
         let func = begin match !st#find name with
             | None -> raise (CodegenUndefinedFunc name)
             | Some v -> v
         end in
         let ll_args = Array.of_list (List.map (codegen_expr builder st) args) in
-        L.build_call func ll_args (get_temp ()) builder
+        let temp_name = begin match rtyp with
+            | Void -> ""
+            | _ -> get_temp ()
+        end in
+        L.build_call func ll_args temp_name builder
     | _ -> raise CodegenTODO
 
 and codegen_binop builder st = function
@@ -225,7 +229,11 @@ let codegen_func_terminator typ builder =
         | Semantics.Int -> L.build_ret (L.const_int int_t 0) builder
         | _ -> raise Unimplemented
 
-
+let codegen_declare_func st name rtyp args =
+        let rtyp = get_type rtyp in
+        let func_typ = L.function_type rtyp (Array.map get_type (Array.of_list args)) in
+        let sym = L.declare_function name func_typ the_module in
+        !st#add name sym
 
 let codegen_global_decl st = function
     | VDecl {vtyp = vtyp; vname = vname; vvalue = vvalue} ->
@@ -248,9 +256,22 @@ let codegen_global_decl st = function
         codegen_func_terminator ftyp builder;
         sym
 
+let codegen_global_func_forward old_st new_st =
+    let f _ = 
+        function
+        | SymFun {sf_name = name; sf_rtyp = rtyp; sf_args = args; sf_is_forward = is_forward;} ->
+            if is_forward then
+                codegen_declare_func new_st name rtyp args
+            else 
+                ()
+        | _ -> ()
+    in 
+    !old_st#map_curr_level f
+        
 let codegen_program = function
-    Program (ds, _) -> 
+    Program (ds, old_st) -> 
         let st = ref @@ new symbol_table None print_val in
+        codegen_global_func_forward old_st st;
         ignore @@ List.map (codegen_global_decl st) ds;
         print_endline (L.string_of_llmodule the_module);
         L.print_module "out.s" the_module;

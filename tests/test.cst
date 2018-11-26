@@ -1,5 +1,3 @@
-int input = 7;
-
 int fac(int n)
 {
     if (n == 1)
@@ -9,5 +7,7 @@ int fac(int n)
 }
 
 int main() {
-    return fac(input);
+    int input = get_int();
+    int res = fac(input);
+    put_int(res);
 }

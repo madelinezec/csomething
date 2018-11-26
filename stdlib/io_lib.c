@@ -1,10 +1,11 @@
 #include "matrix_lib.h"
 #include <stdint.h>
+#include <unistd.h>
 
 /* read one integer from stdin */
 uint64_t get_int(){
 	char buffer[BUFSIZ];
-	read(0, buffer, strlen(buffer));
+	read(0, buffer, BUFSIZ);
 	
 	/*source for converting string to integer: 
 	https://www.programmingsimplified.com/c/source-code/c-program-convert-string-to-integer-without-using-atoi-function*/
@@ -33,9 +34,31 @@ uint64_t get_int(){
 }
 
 /* write one integer to stdout */
-void put_int(uint64_t){
-	int * ptr = &uint64_t;
-	write(1, ptr, sizeof(ptr));
+void put_int(int x){
+    char str[BUFSIZ];
+
+	int i = 0; 
+    while (x) 
+    { 
+        printf("i enter here \n");
+        str[i] = (x%10) + '0';
+        i++;
+        x = x/10; 
+    } 
+    printf("%s", str);
+    printf("\n");
+    printf("will we ever enter the foor loop \n");
+    
+    char revstr[i];
+    int len = i;
+
+    for(int j = 0; j < len; j++){
+        i = i- 1;
+        revstr[j] = str[i];
+    }
+    revstr[len + 1] = '\0'; 
+    write(1, str, sizeof(str));
+    
 }
 
 /* read one float from stdin */

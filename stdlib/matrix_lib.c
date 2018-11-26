@@ -150,7 +150,7 @@ int *get_index_matrix_int(struct matrix *m, size_t i, size_t j){
 	if(i > m->m || j > m->n){
 		char str[] = "Index out of bounds";
 		write(2, str, strlen(str));
-		return;
+		exit(-1);
 	}
 	int offset = i * num_columns + j;
 	int * index_pointer; 
@@ -163,7 +163,7 @@ float *get_index_matrix_float(struct matrix *m, size_t i, size_t j){
 	if(i > m->m || j > m->n){
 		char str[] = "Index out of bounds";
 		write(2, str, strlen(str));
-		return;
+		exit(-1);
 	}
 	int offset = i * num_columns + j;
 	int * index_pointer; 
@@ -175,7 +175,7 @@ int *get_index_vec_int(struct vector *v, size_t i){
 	if(i > m->n){
 		char str[] = "Index out of bounds";
 		write(2, str, strlen(str));
-		return;
+		exit(-1);
 	}
 	int * index_pointer;
 	index_pointer = &v->data[i];
@@ -186,7 +186,7 @@ float *get_index_vec_float(struct vector *v, size_t i){
 	if(i > m->n){
 		char str[] = "Index out of bounds";
 		write(2, str, strlen(str));
-		return;
+		exit(-1);
 	}
 	float * index_pointer;
 	index_pointer = &v->data[i];
@@ -289,14 +289,14 @@ void mat_inv_int(struct matrix *dest, struct matrix *src){
 	if(src->m != src->n){
 		char str[] = "Non-square matrices are not invertible";
 		write(2, str, strlen(str));
-		return;
+		exit(-1);
 	}
 }
 void mat_inv_float(struct matrix *dest, struct matrix *src){
 	if(src->m != src->n){
 		char str[] = "Non-square matrices are not invertible";
 		write(2, str, strlen(str));
-		return;
+		exit(-1);
 	}
 }
 

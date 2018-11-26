@@ -182,10 +182,29 @@ let rec codegen_stmt builder st = function
         codegen_stmt (L.builder_at_end context else_bb) st s2;
         ignore @@ L.build_br merge_bb (L.builder_at_end context else_bb);
         ignore @@ L.build_cond_br cond_val then_bb else_bb (L.builder_at_end context start_bb);
-        L.position_at_end merge_bb builder;
-    | While _ -> raise CodegenTODO
-    | For _ -> raise CodegenTODO
+        L.position_at_end merge_bb builder
+    | While (e, s) ->
+        let start_bb = L.insertion_block builder in
+        let func = L.block_parent start_bb in
+        let cond_bb = L.append_block context "cond_block" func in
+        let loop_bb = L.append_block context "loop_body" func in
+        let loop_builder = L.builder_at_end context loop_bb in
+        codegen_stmt loop_builder st s;
+        let end_bb = L.append_block context "end_block" func in
+       
+        let cond_builder = L.builder_at_end context cond_bb in
+        let cond = codegen_expr cond_builder st e in
+        let zero = L.const_int bool_t 0 in
+
+        let cond_val_builder = L.builder_at_end context cond_bb in 
+        let cond_val = L.build_icmp L.Icmp.Ne cond zero "ifcond" cond_val_builder in
+        ignore @@ L.build_cond_br cond_val loop_bb end_bb (L.builder_at_end context cond_bb);
+        ignore @@ L.build_br cond_bb builder;
+        ignore @@ L.build_br cond_bb (L.builder_at_end context loop_bb);
+        L.position_at_end end_bb builder
     | _ -> raise CodegenBug
+
+
 
 let codegen_allocate_args builder st func formals =
     let bind ll_param decl =

@@ -6,7 +6,7 @@ type typ =
 
 type symbol =
     | SymVar of {sv_name : string; sv_typ : typ; sv_is_temp : bool; sv_is_func_arg : bool; sv_is_global : bool; mutable sv_ref : int }
-    | SymFun of {sf_name : string; sf_rtyp : typ; sf_args : typ list; mutable sf_ref : int}
+    | SymFun of {sf_name : string; sf_rtyp : typ; sf_args : typ list; mutable sf_ref : int; sf_is_forward : bool}
     [@@deriving show]
 
 type op = Ast.op
@@ -178,7 +178,7 @@ let rec desugar_decl st = function
         VDecl {vtyp = desugar_typ vtyp; vname = vname; vvalue = desugar_expr st new_value }
     | Ast.FDecl {Ast.ftyp = ftyp; fname = fname; formals = formals; fbody = fbody} ->
         let new_typs = List.map (function vd -> desugar_typ vd.Ast.vtyp) formals in
-        let sym = SymFun {sf_name = fname; sf_rtyp = desugar_typ ftyp; sf_args = new_typs; sf_ref = 0} in
+        let sym = SymFun {sf_name = fname; sf_rtyp = desugar_typ ftyp; sf_args = new_typs; sf_ref = 0; sf_is_forward = false} in
         !st#add fname sym;
         let new_ref = ref @@ new symbol_table (Some st) show_symbol in
         let new_formals = List.map (desugar_func_arg new_ref) (List.map (function x -> Ast.VDecl x) formals) in
@@ -191,3 +191,10 @@ let rec desugar_program (st: symbol symbol_table ref) : Ast.program -> desugared
         let decl = desugar_decl st x in
         match desugar_program st xs with
             | Program (res, st) -> Program (decl :: res, st)
+
+let inject_library st =
+    let lib_funcs = [
+        SymFun {sf_name = "put_int"; sf_rtyp = Void; sf_args = [Int]; sf_is_forward = true; sf_ref = 0};
+        SymFun {sf_name = "get_int"; sf_rtyp = Int; sf_args = []; sf_is_forward = true; sf_ref = 0}
+    ] in
+    ignore @@ List.map (function SymFun s as sym -> !st#add s.sf_name sym | SymVar _ -> raise DesugaringBug) lib_funcs

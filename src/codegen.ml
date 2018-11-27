@@ -117,13 +117,17 @@ let rec codegen_expr builder st : expr -> L.llvalue = function
         let var = codegen_ptr builder st ptr in  
         L.build_load var (get_temp ()) builder 
     | SymRefVar _ -> raise CodegenBug
-    | Call (SymFun {sf_name = name}, args) ->
+    | Call (SymFun {sf_name = name; sf_rtyp = rtyp}, args) ->
         let func = begin match !st#find name with
             | None -> raise (CodegenUndefinedFunc name)
             | Some v -> v
         end in
         let ll_args = Array.of_list (List.map (codegen_expr builder st) args) in
-        L.build_call func ll_args (get_temp ()) builder
+        let temp_name = begin match rtyp with
+            | Void -> ""
+            | _ -> get_temp ()
+        end in
+        L.build_call func ll_args temp_name builder
     | _ -> raise CodegenTODO
 
 and codegen_binop builder st = function
@@ -182,10 +186,29 @@ let rec codegen_stmt builder st = function
         codegen_stmt (L.builder_at_end context else_bb) st s2;
         ignore @@ L.build_br merge_bb (L.builder_at_end context else_bb);
         ignore @@ L.build_cond_br cond_val then_bb else_bb (L.builder_at_end context start_bb);
-        L.position_at_end merge_bb builder;
-    | While _ -> raise CodegenTODO
-    | For _ -> raise CodegenTODO
+        L.position_at_end merge_bb builder
+    | While (e, s) ->
+        let start_bb = L.insertion_block builder in
+        let func = L.block_parent start_bb in
+        let cond_bb = L.append_block context "cond_block" func in
+        let loop_bb = L.append_block context "loop_body" func in
+        let loop_builder = L.builder_at_end context loop_bb in
+        codegen_stmt loop_builder st s;
+        let end_bb = L.append_block context "end_block" func in
+       
+        let cond_builder = L.builder_at_end context cond_bb in
+        let cond = codegen_expr cond_builder st e in
+        let zero = L.const_int bool_t 0 in
+
+        let cond_val_builder = L.builder_at_end context cond_bb in 
+        let cond_val = L.build_icmp L.Icmp.Ne cond zero "ifcond" cond_val_builder in
+        ignore @@ L.build_cond_br cond_val loop_bb end_bb (L.builder_at_end context cond_bb);
+        ignore @@ L.build_br cond_bb builder;
+        ignore @@ L.build_br cond_bb (L.builder_at_end context loop_bb);
+        L.position_at_end end_bb builder
     | _ -> raise CodegenBug
+
+
 
 let codegen_allocate_args builder st func formals =
     let bind ll_param decl =
@@ -206,7 +229,11 @@ let codegen_func_terminator typ builder =
         | Semantics.Int -> L.build_ret (L.const_int int_t 0) builder
         | _ -> raise Unimplemented
 
-
+let codegen_declare_func st name rtyp args =
+        let rtyp = get_type rtyp in
+        let func_typ = L.function_type rtyp (Array.map get_type (Array.of_list args)) in
+        let sym = L.declare_function name func_typ the_module in
+        !st#add name sym
 
 let codegen_global_decl st = function
     | VDecl {vtyp = vtyp; vname = vname; vvalue = vvalue} ->
@@ -229,9 +256,22 @@ let codegen_global_decl st = function
         codegen_func_terminator ftyp builder;
         sym
 
+let codegen_global_func_forward old_st new_st =
+    let f _ = 
+        function
+        | SymFun {sf_name = name; sf_rtyp = rtyp; sf_args = args; sf_is_forward = is_forward;} ->
+            if is_forward then
+                codegen_declare_func new_st name rtyp args
+            else 
+                ()
+        | _ -> ()
+    in 
+    !old_st#map_curr_level f
+        
 let codegen_program = function
-    Program (ds, _) -> 
+    Program (ds, old_st) -> 
         let st = ref @@ new symbol_table None print_val in
+        codegen_global_func_forward old_st st;
         ignore @@ List.map (codegen_global_decl st) ds;
         print_endline (L.string_of_llmodule the_module);
         L.print_module "out.s" the_module;

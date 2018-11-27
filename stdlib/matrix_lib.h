@@ -2,6 +2,11 @@
 #define MATRIX_LIB_H
 
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#define STD_ERR 2
+
 /* these two are opaque types.
  * they should be internal to the implementation
  * our codegen should not concern itself with
@@ -14,34 +19,50 @@
  *     void *data; // the actual matrix entries on the heap 
  * }
  */
-struct matrix;
-struct vector;
+typedef struct matrix_int Mat_i;
+typedef struct matrix_float Mat_f;
+typedef struct vector_int Vec_i;
+typedef struct vector_float Vec_f;
+
 
 /* allocates an m*n matrix of type int on the heap */
-struct matrix *alloc_mat_int(size_t m, size_t n);
+Mat_i* alloc_mat_int(size_t m, size_t n);
 
 /* allocate matrix of floats */
-struct matirx *alloc_mat_float(size_t m, size_t n);
+Mat_f* alloc_mat_float(size_t m, size_t n);
 
 /* allocate an array of integers of size n */
-struct vector *alloc_vec_int(size_t n);
+Vec_i* alloc_vec_int(size_t n);
 
 /* allocate an array of floats */
-struct vector *alloc_vec_float(size_t n);
+Vec_f* alloc_vec_float(size_t n);
 
 /* this should call whatever destructor necessary and call free */
-void free_matrix(struct vector *m);
+void free_matrix(Mat_i* mat);
+void free_matrix(Mat_f* mat);
 
-void free_vector(struct vector *v);
+void free_vector(Vec_i* v);
+void free_vector(Vec_f* v);
 
-/* fill the matrix m with entries from one-dimensional array "data" */
+/* fill the matrix m with entries from one-dimensional array "data" 
 void fill_mat_int(struct matrix *m, int *data);
 
 void fill_mat_float(struct matrix *m, float *data);
 
 void fill_vec_int(struct vector *v, int *data);
 
-void fill_vec_float(struct vector *v, float *data);
+void fill_vec_float(struct vector *v, float *data);*/
+
+/* Cheker functions*/
+void void_check(void* m);
+void mat_index_check(Mat_i* m, size_t i, size_t j);
+void mat_index_check(Mat_f* m, size_t i, size_t j);
+void mat_add_size_check(Mat_i* mat_1, Mat_i* mat_2);
+void mat_add_size_check(Mat_f* mat_1, Mat_f* mat_2);
+void vec_add_size_check(Vec_i* vec_1, Vec_i* vec_2);
+void vec_add_size_check(Vec_f* vec_1, Vec_f* vec_2);
+void mat_mul_size_check(Mat_i* mat_1, Mat_i* mat_2);
+void mat_mul_size_check(Mat_f* mat_1, Mat_f* mat_2);
 
 /* In case of index-out-of-bounds, the functions should
  * write to stderr and exit the process */
@@ -50,34 +71,27 @@ void fill_vec_float(struct vector *v, float *data);
  * location holding m[i][j],
  * so it could be read from or written to by
  * the generated program */
-int *get_index_matrix_int(struct matrix *m, size_t i, size_t j);
-
-/* similar to the previous function */
-float *get_index_matrix_float(struct matrix *m, size_t i, size_t j);
-
-int *get_index_vec_int(struct vector *v, size_t i);
-
-float *get_index_vec_float(struct vector *v, size_t i);
+int* get_index_matrix(Mat_i* m, size_t i, size_t j);
+float* get_index_matrix(Mat_f *m, size_t i, size_t j);
+int* get_index_vec(Vec_i* v, size_t i);
+float* get_index_vec(Vec_f* v, size_t i);
 
 
 /* the following are linear algebra operations */
-
-void addition_mat_int(struct matrix *dest, struct matrix *arg1, struct matrix *arg2);
-void addition_mat_float(struct matrix *dest, struct matrix *arg1, struct matrix *arg2);
-void addition_vec_int(struct vector *dest, struct vector *arg1, struct vector *arg2);
-void addition_vec_float(struct vector *dest, struct vector *arg1, struct vector *arg2);
-
-void scalar_product_mat_int(struct matrix *dest, int arg1, struct matrix *arg2);
-void scalar_product_mat_float(struct matrix *dest, int arg1, struct matrix *arg2);
-void scalar_product_vec_int(struct vector *dest, int arg1, struct vector *arg2);
-void scalar_product_vec_float(struct vector *dest, int arg1, struct vector *arg2);
-
-void mat_product_int(struct matrix *dest, struct matrix *arg1, struct matrix *arg2);
-void mat_product_float(struct matrix *dest, struct matrix *arg1, struct matrix *arg2);
-
-void mat_inv_int(struct matrix *dest, struct matrix *src);
-void mat_inv_float(struct matrix *dest, struct matrix *src);
+Mat_i* add_mat_mat(Mat_i* mat_1, Mat_i* mat_2);
+Mat_f* add_mat_mat(Mat_f* mat_1, Mat_f* mat_2);
+Vec_i* add_vec_vec(Vec_i* vec_1, Vec_i* vec_2);
+Vec_f* add_vec_vec(Vec_f* vec_1, Vec_f* vec_2);
+Mat_i* scalar_mul_mat(int num, Mat_i* mat);
+Mat_f* scalar_mul_mat(int num, Mat_f* mat);
+Vec_i* scalar_mul_vec(int num, Vec_i* vec);
+Vec_f* scalar_mul_vec(int num, Vec_f* vec);
+Mat_i* mat_product_int(Mat_i* mat_1, Mat_i* mat_2);
+Mat_f* mat_product_int(Mat_f* mat_1, Mat_f* mat_2);
 
 // more operations to follow
 
+/* Matrix type cast*/
+Mat_f* mat_int_to_float(Mat_i* mat);
+Mat_i* mat_float_to_int(Mat_f* mat);
 #endif

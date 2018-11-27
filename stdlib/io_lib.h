@@ -5,10 +5,10 @@
 #include <stdint.h>
 
 /* read one integer from stdin */
-uint64_t get_int();
+int64_t get_int();
 
 /* write one integer to stdout */
-void put_int(uint64_t);
+void put_int(int64_t);
 
 /* read one float from stdin */
 float get_float(float);
@@ -17,8 +17,9 @@ float get_float(float);
 void put_float();
 
 /* print a matrix */
-void put_mat(struct matrix* m);
-
+void put_mat(struct matrix_int* m);
+void put_mat(struct matrix_float* m);
 /* print a vector */
-void put_vec(struct vector *v);
+void put_vec(struct vector_int *v);
+void put_vec(struct vector_float *v);
 #endif

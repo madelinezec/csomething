@@ -14,7 +14,9 @@ let _ =
     try
         let ast = Parser.program Scanner.token lexbuf in
         print_string (Ast.string_of_program ast);
-        let desugared = Semantics.desugar_program (ref @@ new Symbol.symbol_table None Semantics.show_symbol) ast in
+        let st = ref @@ new Symbol.symbol_table None Semantics.show_symbol in
+        Semantics.inject_library st;
+        let desugared = Semantics.desugar_program st ast in
         begin match desugared with
             | Semantics.Program (x, st) ->
                 ignore (List.map print_endline (List.map Semantics.show_decl x));

@@ -1,14 +1,24 @@
-#include "matrix_lib.h"
 #include <stdint.h>
+#include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
+#include "matrix_lib.h"
+
+//#define BUFSIZ 256
 /* read one integer from stdin */
-uint64_t get_int(){
-	char buffer[BUFSIZ];
+int64_t get_int(){
+    int64_t ret;
+    scanf("%ld", &ret);
+    return ret;
+    /*
+    car buffer[BUFSIZ];
 	read(0, buffer, BUFSIZ);
-	
-	/*source for converting string to integer: 
-	https://www.programmingsimplified.com/c/source-code/c-program-convert-string-to-integer-without-using-atoi-function*/
+
+    int sign = 1;
+    size_t offset = 0;
+    //	source for converting string to integer: 
+	//  https://www.programmingsimplified.com/c/source-code/c-program-convert-string-to-integer-without-using-atoi-function
 	if (buffer[0] == '-') {  // Handle negative integers
     	sign = -1;
   	}
@@ -20,9 +30,9 @@ uint64_t get_int(){
     	offset = 0;
   	}
  
-  	n = 0;
+  	int n = 0;
  
-  	for (c = offset; buffer[c] != '\0'; c++) {
+  	for (int c = offset; buffer[c] != '\0'; c++) {
     	n = n * 10 + buffer[c] - '0';
   	}
  
@@ -31,10 +41,14 @@ uint64_t get_int(){
   	}
  
   	return n;
+   */ 
+
 }
 
 /* write one integer to stdout */
-void put_int(int x){
+void put_int(int64_t x){
+    printf("%ld", x);
+    /*
     char str[BUFSIZ];
 
 	int i = 0; 
@@ -55,22 +69,28 @@ void put_int(int x){
     }
     revstr[len] = '\0';
     write(1, revstr, sizeof(revstr));
-    
+    */
+
 }
 
 /* read one float from stdin */
 float get_float(){
+    float ret;
+    scanf("%f", &ret);
+    return ret;
+    /*
 	char buffer [BUFSIZ];
 	read(0, buffer, strlen(buffer));
 	
-	/*source for converting string to float:
-	https://stackoverflow.com/q/4392665/6637004*/
+	source for converting string to float:
+	https://stackoverflow.com/q/4392665/6637004
 	const char * s = buffer;
 	float rez = 0, fact = 1;
   	if (*s== '-'){
     	s++;
     	fact = -1;
   	};
+
   	for(int point_seen = 0; buffer; s++){
     	if (*s == '.'){
       		point_seen = 1; 
@@ -84,12 +104,15 @@ float get_float(){
       		rez = rez * 10.0f + (float)d;
   		}
   	return rez * fact;
+    }
+    */
 
 }
 
 /* write one float to stdout */
 void put_float(float x){
- 
+    printf("%f", x);
+    /* 
 	double integral;
     float fractional;
 
@@ -98,10 +121,11 @@ void put_float(float x){
 	put_int(integral);
 	write(1, ".", strlen("."));
 	put_int(fractional);
+*/
 }
 
 /* print a matrix */
-void put_mat(struct matrix* m){
+/*void put_mat(struct matrix* m){
 	int rows = m->m;
 	int columns = m->n;
 	int offset;
@@ -128,9 +152,9 @@ void put_mat(struct matrix* m){
 		write(1, new_line, strlen(new_line));
 	}
 }
-
+*/
 /* print a vector */
-void put_vec(struct vector *v){
+/*void put_vec(struct vector *v){
 	int length = v->n;
 	int size;
 	if(v->type == 0){
@@ -148,5 +172,5 @@ void put_vec(struct vector *v){
 		}
 		write(1, white_space, strlen(white_space));
 	}
-}
+}*/
 

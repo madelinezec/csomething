@@ -5,7 +5,7 @@
  * the layout of these objects */
 
  /*possible memory layout:*/
-
+/*
 struct matrix_int {
     size_t m, n;
     int** data; // the actual matrix entries on the heap 
@@ -25,7 +25,7 @@ struct vector_float {
     size_t n;
     float* data; // the actual matrix entries on the heap 
 };
-
+*/
 
 /* allocates an m*n matrix of type int on the heap */
 Mat_i* alloc_mat_int(size_t m, size_t n){

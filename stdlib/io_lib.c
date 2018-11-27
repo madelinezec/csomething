@@ -1,18 +1,21 @@
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio.h>
+#include <math.h>
 
 #include "matrix_lib.h"
 
-//#define BUFSIZ 256
+#define BUFSIZ 256
 /* read one integer from stdin */
+
+struct matrix_int;
+
 int64_t get_int(){
-    int64_t ret;
+/*    int64_t ret;
     scanf("%ld", &ret);
     return ret;
-    /*
-    car buffer[BUFSIZ];
+    */
+  char buffer[BUFSIZ];
 	read(0, buffer, BUFSIZ);
 
     int sign = 1;
@@ -41,14 +44,14 @@ int64_t get_int(){
   	}
  
   	return n;
-   */ 
+    
 
 }
 
 /* write one integer to stdout */
-void put_int(int64_t x){
-    printf("%ld", x);
-    /*
+void put_int(int x){
+   /* printf("%ld", x);*/
+    
     char str[BUFSIZ];
 
 	int i = 0; 
@@ -69,29 +72,29 @@ void put_int(int64_t x){
     }
     revstr[len] = '\0';
     write(1, revstr, sizeof(revstr));
-    */
+    
 
 }
 
 /* read one float from stdin */
 float get_float(){
     float ret;
-    scanf("%f", &ret);
+   /* scanf("%f", &ret);
     return ret;
-    /*
+    */
 	char buffer [BUFSIZ];
 	read(0, buffer, strlen(buffer));
 	
-	source for converting string to float:
-	https://stackoverflow.com/q/4392665/6637004
-	const char * s = buffer;
+	//source for converting string to float:
+	//https://stackoverflow.com/q/4392665/6637004
+	const char* s = buffer;
 	float rez = 0, fact = 1;
   	if (*s== '-'){
     	s++;
     	fact = -1;
   	};
 
-  	for(int point_seen = 0; buffer; s++){
+  	for(int point_seen = 0; *s; s++){
     	if (*s == '.'){
       		point_seen = 1; 
       		continue;
@@ -103,74 +106,77 @@ float get_float(){
       		} 
       		rez = rez * 10.0f + (float)d;
   		}
-  	return rez * fact;
     }
-    */
+  	return rez * fact;
+    
+    
 
 }
 
 /* write one float to stdout */
 void put_float(float x){
-    printf("%f", x);
-    /* 
+   /* printf("%f", x);*/
+    
 	double integral;
-    float fractional;
-
-    fractional = modf(x, &integral);
+  float fractional;
+  fractional = modf(x, &integral);
 
 	put_int(integral);
 	write(1, ".", strlen("."));
 	put_int(fractional);
-*/
 }
 
 /* print a matrix */
-/*void put_mat(struct matrix* m){
+void put_mat(struct matrix_int* m){
 	int rows = m->m;
 	int columns = m->n;
 	int offset;
-	char new_line [] = "\n"
-	char white_space [] = " "
-	int size;
-	if(m->type == 0){
-		size = sizeof(int);
-	}
-	if(m->type == 1){
-		size = sizeof(float);
-	}
+	char new_line [] = "\n";
+	char white_space [] = " ";
+
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < columns; j++){
-			offset = i * num_columns + j;
-			if(m->type == 0){
-				put_int(&m->data[offset]);
-			}
-			if(m->type == 1){
-				put_float(&m->data[offset]);
-			}
+			offset = i * columns + j;
+			put_int(*m->data[offset]);
 			write(1, white_space, strlen(white_space));
 		}
 		write(1, new_line, strlen(new_line));
 	}
 }
-*/
+
+void put_mat(struct matrix_float* m){
+  int rows = m->m;
+  int columns = m->n;
+  int offset;
+  char new_line [] = "\n";
+  char whiteSpace [] = " ";
+
+  for(int i = 0; i < rows; i++){
+    for(int j = 0; j < columns; j++){
+      offset = i * columns + j;
+      put_float(*(m->data[offset]));
+      write(1, whiteSpace, strlen(whiteSpace));
+    }  
+    write(1, new_line, strlen(new_line));
+  }
+}
+
 /* print a vector */
-/*void put_vec(struct vector *v){
+void put_vec(struct vector_int* v){
 	int length = v->n;
-	int size;
-	if(v->type == 0){
-		size = sizeof(int);
-	}
-	if(v->type == 1){
-		size = sizeof(float);
-	}
+  char white_space [] = " ";
 	for(int j = 0; j < length; j++){
-		if(v->type == 0){
-			put_int(&v->data[j]);
-		}
-		if(v->type == 1){
-			put_float(&v->data[j]);
-		}
+		put_int(v->data[j]);
 		write(1, white_space, strlen(white_space));
 	}
-}*/
+}
+
+void put_vec(struct vector_float* v){
+  int length = v->n;
+  char white_space [] = " ";
+  for(int j = 0; j < length; j++){
+    put_float(v->data[j]);
+    write(1, white_space, strlen(white_space));
+  }
+}
 

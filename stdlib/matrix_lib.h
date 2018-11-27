@@ -19,11 +19,32 @@
  *     void *data; // the actual matrix entries on the heap 
  * }
  */
+
 typedef struct matrix_int Mat_i;
 typedef struct matrix_float Mat_f;
 typedef struct vector_int Vec_i;
 typedef struct vector_float Vec_f;
 
+
+struct matrix_int {
+    size_t m, n;
+    int** data; // the actual matrix entries on the heap 
+ };
+ 
+struct matrix_float {
+    size_t m, n;
+    float** data; // the actual matrix entries on the heap 
+ };
+ 
+struct vector_int {
+    size_t n;
+    int* data; // the actual matrix entries on the heap 
+ };
+ 
+struct vector_float {
+    size_t n;
+    float* data; // the actual matrix entries on the heap 
+};
 
 /* allocates an m*n matrix of type int on the heap */
 Mat_i* alloc_mat_int(size_t m, size_t n);

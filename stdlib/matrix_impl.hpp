@@ -37,7 +37,7 @@ struct MatrixImpl: public MatrixBase {
     T **data;
     
     template <typename Target>
-    void type_check(MatrixBase *other) {
+    Target *type_check(MatrixBase *other) {
         Target *ret = nullptr;
         if (!(ret = dynamic_cast<Target *>(other))) {
             std::cerr << "Type mismatch\n";
@@ -47,12 +47,12 @@ struct MatrixImpl: public MatrixBase {
     }
 
     MatrixBase *add(MatrixBase *other) override {
-        OwnType *real_other = type_check<OwnType>();
+        OwnType *real_other = type_check<OwnType>(other);
         //TODO: implement here
     }
 
     MatrixBase *matrixMultiply(MatrixBase *other) override {
-        OwnType *real_other = type_check<OwnType>(); 
+        OwnType *real_other = type_check<OwnType>(other); 
         //TODO: implement here
     }
 

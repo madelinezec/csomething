@@ -17,8 +17,9 @@ float get_float(float);
 void put_float();
 
 /* print a matrix */
-void put_mat(struct matrix* m);
-
+void put_mat(struct matrix_int* m);
+void put_mat(struct matrix_float* m);
 /* print a vector */
-void put_vec(struct vector *v);
+void put_vec(struct vector_int *v);
+void put_vec(struct vector_float *v);
 #endif

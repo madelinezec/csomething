@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <math.h>
 
-#include "matrix_lib.h"
+#include "matrix_lib.hpp"
 
 #define BUFSIZ 256
 /* read one integer from stdin */

@@ -38,6 +38,7 @@ void put_int(int x){
     char str[BUFSIZ];
 
 	int i = 0; 
+    /*source for while loop: https://bit.ly/2TEkpfb */
     while (x) 
     { 
         str[i] = (x%10) + '0';

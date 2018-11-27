@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#define STD_ERR 2
+
+#include "matrix_impl.hpp"
 
 /* these two are opaque types.
  * they should be internal to the implementation

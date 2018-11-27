@@ -1,4 +1,8 @@
-#include "matrix_lib.h"
+#include "matrix_lib.hpp"
+
+#define STD_ERR 2
+
+template struct MatrixImpl<int>;
 /* these two are opaque types.
  * they should be internal to the implementation
  * our codegen should not concern itself with

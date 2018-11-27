@@ -1,7 +1,7 @@
 #ifndef IO_LIB_H
 #define IO_LIB_H
 
-#include "matrix_lib.h"
+#include "matrix_lib.hpp"
 #include <stdint.h>
 
 /* read one integer from stdin */

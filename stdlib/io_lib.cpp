@@ -6,20 +6,23 @@
 #include "matrix_lib.hpp"
 
 /* read one integer from stdin */
-
+extern "C"{
 int64_t get_int(){
 /*    int64_t ret;
     scanf("%ld", &ret);
     return ret;
     */
-  char buffer[BUFSIZ];
-  read(0, buffer, BUFSIZ);
 
+   printf("i get to put_int\n"); 
+   char buffer[BUFSIZ];
+   read(0, buffer, BUFSIZ);
+    printf("this is buffer %s", buffer);
+  //  printf("this is buffer %d ", buffer[0]);
     int sign = 1;
-    size_t offset = 0;
+    int offset = 0;
     //  source for converting string to integer: 
   //  https://www.programmingsimplified.com/c/source-code/c-program-convert-string-to-integer-without-using-atoi-function
-  if (buffer[0] == '-') {  // Handle negative integers
+    if (buffer[0] == '-') {  // Handle negative integers
       sign = -1;
     }
  
@@ -32,34 +35,38 @@ int64_t get_int(){
  
     int n = 0;
  
-    for (int c = offset; buffer[c] != '\0'; c++) {
+    for (int c = offset; buffer[c] != '\n'; c++) {
       n = n * 10 + buffer[c] - '0';
+//      printf("buffer[c] %d and n %d", buffer[c], n);
+    
     }
  
     if (sign == -1) {
       n = -n;
     }
- 
+    printf("this is the n returned %d \n", n); 
     return n;
     
 
 }
-
+}
 /* write one integer to stdout */
-void put_int(int x){
+extern "C" void put_int(int x){
    /* printf("%ld", x);*/
-    
+   printf("i get to put_int %d \n", x); 
     char str[BUFSIZ];
 
   int i = 0; 
     /*source for while loop: https://bit.ly/2TEkpfb */
     while (x) 
     { 
-        str[i] = (x%10) + '0';
-        i++;
-        x = x/10; 
+        str[i++] = (x%10) + '0';
+       // i++;
+        x = x/10;
+        //printf("this is the string %s \n", str);
     } 
-    
+    str[i] = '\0';
+    printf("this is str %s \n", str); 
     char revstr[i];
     int len = i;
 
@@ -68,7 +75,8 @@ void put_int(int x){
         revstr[j] = str[i];
     }
     revstr[len] = '\0';
-    write(1, revstr, sizeof(revstr));
+    printf("this is revstr %s\n", revstr);
+    write(1, &revstr, len);
     
 
 }

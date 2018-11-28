@@ -64,33 +64,20 @@ type assignment =
 type stmt_opt = StmtExpression of assignment | OptNil
 [@@deriving show]
 
-type stmtlist =
-    | StmtList of stmt * stmtlist
-    | StmtlistNil 
-[@@deriving show]
-(* OR type stmt_list = 
-| StatementList of stmt * (stmt list) option ???*)
-(*stmt_prime ->SEMI| expr SEMI*)
-
-(*. stmt -> assignment SEMI 
-stmt -> RETURN stmt_opt SEMI
-stmt -> LBRACE stmt_list RBRACE 
-stmt -> IF LPAREN assignment RPAREN stmt 
-stmt -> FOR LPAREN assignment SEMI assignment SEMI assignment RPAREN stmt  
-stmt -> WHILE LPAREN assignment RPAREN stmt
-*)
-and stmt = 
+type stmt = 
+| Block of stmt list 
 | Assignment of assignment
 | Return of stmt_opt 
-| Parentheses of stmtlist
+| Parentheses of stmt
 | If of assignment * stmt
 | For of assignment * assignment * assignment * stmt
 | While of assignment * stmt
+| StmtNil
 (*“lparen” formals_opt “rparen” “LBRACE” vdecl_list stmt_list “RBRACE”*)
 [@@deriving show]
 
 type functiondeclaration =
-    | Funcdecl of formalsOpt * variabledeclarationlist * stmtlist
+    | Funcdecl of formalsOpt * variabledeclarationlist * stmt
 [@@deriving show]
 
 

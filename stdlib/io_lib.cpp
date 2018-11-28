@@ -68,13 +68,17 @@ extern "C" void put_int(int x){
     }
     revstr[len] = '\0';
     if(neg_sign){
-	    char neg [2];
-	    neg [0] = '-';
-	    neg[1] = '\0';
-	    write(1, &neg, strlen(neg));
-    }	
-    write(1, &revstr, len);
-    
+        char final_array [len + 1];
+	final_array[0] = '-';
+	for(int i = 0; i < len - 1; i++){
+		final_array[i + 1] = revstr[i];
+        }
+        final_array[len + 1] = '\0';
+    	write(1, &final_array, strlen(final_array));
+    }
+    else{    
+       write(1, &revstr, len);
+   }
 
 }
 

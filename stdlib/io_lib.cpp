@@ -73,7 +73,7 @@ extern "C" void put_int(int x){
 		  final_array[i + 1] = revstr[i];
     }
     final_array[len + 1] = '\0';
-    rite(1, &final_array, strlen(final_array));
+    write(1, &final_array, strlen(final_array));
   }
   else{    
     write(1, &revstr, len);

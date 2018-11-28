@@ -8,16 +8,8 @@
 /* read one integer from stdin */
 extern "C"{
 int64_t get_int(){
-/*    int64_t ret;
-    scanf("%ld", &ret);
-    return ret;
-    */
-
-   printf("i get to put_int\n"); 
    char buffer[BUFSIZ];
    read(0, buffer, BUFSIZ);
-    printf("this is buffer %s", buffer);
-  //  printf("this is buffer %d ", buffer[0]);
     int sign = 1;
     int offset = 0;
     //  source for converting string to integer: 
@@ -37,14 +29,12 @@ int64_t get_int(){
  
     for (int c = offset; buffer[c] != '\n'; c++) {
       n = n * 10 + buffer[c] - '0';
-//      printf("buffer[c] %d and n %d", buffer[c], n);
     
     }
  
     if (sign == -1) {
       n = -n;
     }
-    printf("this is the n returned %d \n", n); 
     return n;
     
 
@@ -53,29 +43,36 @@ int64_t get_int(){
 /* write one integer to stdout */
 extern "C" void put_int(int x){
    /* printf("%ld", x);*/
-   printf("i get to put_int %d \n", x); 
     char str[BUFSIZ];
 
-  int i = 0; 
+  int i = 0;
+  int neg_sign = 0; 
     /*source for while loop: https://bit.ly/2TEkpfb */
-    while (x) 
+  if(x < 0){
+      neg_sign = 1;
+      x = x * -1;
+  }
+
+  while (x) 
     { 
         str[i++] = (x%10) + '0';
-       // i++;
         x = x/10;
-        //printf("this is the string %s \n", str);
     } 
     str[i] = '\0';
-    printf("this is str %s \n", str); 
     char revstr[i];
     int len = i;
-
+   
     for(int j = 0; j < len; j++){
         i = i- 1;
         revstr[j] = str[i];
     }
     revstr[len] = '\0';
-    printf("this is revstr %s\n", revstr);
+    if(neg_sign){
+	    char neg [2];
+	    neg [0] = '-';
+	    neg[1] = '\0';
+	    write(1, &neg, strlen(neg));
+    }	
     write(1, &revstr, len);
     
 
@@ -83,10 +80,7 @@ extern "C" void put_int(int x){
 
 /* read one float from stdin */
 float get_float(){
-    float ret;
-   /* scanf("%f", &ret);
-    return ret;
-    */
+  float ret;
   char buffer [BUFSIZ];
   read(0, buffer, strlen(buffer));
   
@@ -120,8 +114,6 @@ float get_float(){
 
 /* write one float to stdout */
 void put_float(float x){
-   /* printf("%f", x);*/
-    
   double integral;
   float fractional;
   fractional = modf(x, &integral);

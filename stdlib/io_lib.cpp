@@ -8,81 +8,27 @@
 /* read one integer from stdin */
 
 extern "C" int64_t get_int(){
-  char buffer[BUFSIZ];
-  read(0, buffer, BUFSIZ);
-  int sign = 1;
-  int offset = 0;
-    //  source for converting string to integer: 
-  //  https://www.programmingsimplified.com/c/source-code/c-program-convert-string-to-integer-without-using-atoi-function
-  if (buffer[0] == '-') {  // Handle negative integers
-    sign = -1;
-  }
- 
-  if (sign == -1) {  // Set starting position to convert
-    offset = 1;
-  }
-  
-  else {
-    offset = 0;
-  }
- 
-  int n = 0;
- 
-  for (int c = offset; buffer[c] != '\n'; c++) {
-    n = n * 10 + buffer[c] - '0';  
-  }
- 
-  if (sign == -1) {
-    n = -n;
-  }
-  return n;
-    
+    char *p, s [BUFSIZ];
+    int n;
+
+    while (fgets(s, sizeof(s), stdin)) {
+        n = strtol(s, &p, 10);
+        if (p == s || *p != '\n') {
+        } else break;
+    }
+    printf("You entered: %d\n", n);
+    return n;
+
 }
 
 /* write one integer to stdout */
 extern "C" void put_int(int x){
-   /* printf("%ld", x);*/
-  char str[BUFSIZ];
-
-  int i = 0;
-  int neg_sign = 0; 
-    /*source for while loop: https://bit.ly/2TEkpfb */
-  if(x < 0){
-      neg_sign = 1;
-      x = x * -1;
-  }
-
-  while (x){ 
-    str[i++] = (x%10) + '0';
-    x = x/10;
-  } 
-  str[i] = '\0';
-  char revstr[i];
-  int len = i;
-   
-  for(int j = 0; j < len; j++){
-    i = i- 1;
-    revstr[j] = str[i];
-  }
-
-  revstr[len] = '\0';
-  if(neg_sign){
-    char final_array [len + 1];
-	  final_array[0] = '-';
-	  for(int i = 0; i < len - 1; i++){
-		  final_array[i + 1] = revstr[i];
-    }
-    final_array[len + 1] = '\0';
-    write(1, &final_array, strlen(final_array));
-  }
-  else{    
-    write(1, &revstr, len);
-  }
+       printf("i get called here");
+      	printf("%d", x);
 
 }
 
-/* read one float from stdin */
-float get_float(){
+extern "C" float get_float(){
   float ret;
   char buffer [BUFSIZ];
   read(0, buffer, strlen(buffer));

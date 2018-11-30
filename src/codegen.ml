@@ -49,14 +49,16 @@ and vector_t = L.pointer_type (L.named_struct_type context "vec")
 and void_t = L.void_type context
 
 exception CannotGetType of expr
+exception TryToGenUnknown
 
 let get_type = function
     | Int -> int_t
     | Bool -> bool_t
     | Void -> void_t
-    | Mat -> matrix_t
+    | Mat _ -> matrix_t
     | Float -> float_t
-    | Vec -> vector_t
+    | Vec _ -> vector_t
+    | Unknown -> raise TryToGenUnknown 
 
 let rec get_const_element_type = function
     | Literal _ -> int_t

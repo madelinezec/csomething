@@ -1,7 +1,7 @@
 open Symbol
 
 type typ = 
-    | Int | Bool | Void | Mat | Float | Vec
+    | Int | Bool | Void | Mat of typ | Float | Vec of typ | Unknown
     [@@deriving show]
 
 type symbol =
@@ -83,15 +83,15 @@ let desugar_for : Ast.stmt -> Ast.stmt = function
     | _ -> raise DesugaringBug
 
 
-let desugar_typ : Ast.typ -> typ = function
+let rec desugar_typ : Ast.typ -> typ = function
     | Ast.Int -> Int
     | Ast.Bool -> Bool
     | Ast.Void -> Void
-    | Ast.Mat -> Mat
-    | Ast.Vec -> Vec
+    | Ast.Mat -> Mat Unknown 
+    | Ast.Vec -> Vec Unknown
     | Ast.Float -> Float
-    | Ast.RealVec _ -> Vec
-    | Ast.RealMat _ -> Mat
+    | Ast.RealVec (t, _) -> Vec (desugar_typ t)
+    | Ast.RealMat (t, _, _) -> Mat (desugar_typ t)
 
 let rec desugar_expr (st : symbol symbol_table ref) = function
     | Ast.Literal x -> Literal x

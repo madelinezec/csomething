@@ -8,14 +8,10 @@ let rec string_of_type typ =
     | Int -> "int"
     | Bool -> "bool"
     | Void -> "void"
-    | Mat -> "matrix"
+    | Mat t -> "matrix of " ^ string_of_type t
     | Float -> "float"
-    | Vec -> "vector"
-    | RealMat (t, a, b) ->
-        (string_of_type t ^ "[" ^ string_of_int a ^ "," ^ string_of_int b ^ "]")
-    | RealVec (t, a) ->
-        (string_of_type t ^ "[" ^ string_of_int a ^ "]")
-    
+    | Vec t -> "vector of " ^ string_of_type t 
+    | _ -> raise (SEM_error "Unknown type") 
 
 let wrap_exception a b = 
     try
@@ -269,18 +265,10 @@ and check_expr dict expr =
                 let r = check_expr dict e2 in
                 let result = 
                     match l, e2 with
-                    |   (RealVec (t, n), VecLit list) ->
-                            if List.length list != n then
-                                raise (SEM_error "Vector length not agree")
-                            else
-                                l                            
-                    |   (RealMat (t, a, b), MatLit list) ->
-                            if List.length list != a 
-                               || List.fold_left (||) false (List.map (fun x -> List.length x != b) list)
-                            then
-                                raise (SEM_error "Matrix length not agree")
-                            else
-                                l
+                    |   (Vec t, VecLit list) ->
+                            l                            
+                    |   (Mat t, MatLit list) ->
+                            l
                     | _ ->
                         let _ = check_compat l r in
                             l
@@ -319,7 +307,7 @@ and check_expr dict expr =
         let _ = check_compat Int r in
         let result = 
             match l with
-            | RealVec (typ, _) ->
+            | Vec typ ->
                 typ
             | _ -> 
                 raise (SEM_error (string_of_type l ^ " can't be singly subscribed"))
@@ -333,9 +321,7 @@ and check_expr dict expr =
         let _ = check_compat Int r3 in
         let result = 
             match l with
-            | RealMat (typ, _, _) ->
-                typ
-            | RealVec (RealVec (typ, _), _) ->
+            | Mat typ ->
                 typ
             | _ ->
                 raise (SEM_error (string_of_type l ^ " can't be doubly subscribed"))

@@ -76,8 +76,8 @@ type stmt =
 (*“lparen” formals_opt “rparen” “LBRACE” vdecl_list stmt_list “RBRACE”*)
 [@@deriving show]
 
-type functiondeclaration =
-    | Funcdecl of formalsOpt * variabledeclarationlist * stmt
+type functiondeclaration = 
+    | Funcdecl of formalsOpt * variabledeclarationlist * stmt list
 [@@deriving show]
 
 

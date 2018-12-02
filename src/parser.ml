@@ -286,13 +286,12 @@ let parseStmtOpt tokenlist =
 
 
 (*stmt_list = stmt stmt_list | epsilon*)
-let rec parseStmtList tokenlist lst = 
+let rec parseStmtList tokenlist = 
     match tokenlist.head with 
     | Lexer.RightBrace -> (tokenlist, [])
     | _ -> let (tokenlist_stmt, stmt) = parseStmt tokenlist in 
-          let new_lst = stmt::lst in
-          let (tokenlist_stmt_list, stmt_lst) = parseStmtList tokenlist_stmt new_lst in
-          (tokenlist_stmt_list, Ast.Block(lst, stmt))
+          let (tokenlist_stmt_list, stmt_list) = parseStmtList tokenlist_stmt in
+          (tokenlist_stmt_list, stmt :: stmt_list)
     
 (*stmt -> assignment SEMI 
 |  RETURN stmt_opt SEMI
@@ -398,10 +397,10 @@ and parseStmt tokenlist =
                     raise (Syntax_error err_msg)
                 end
    | Lexer.LeftBrace -> let tokenlist_leftbrace = next tokenlist in 
-                        let (tokenlist_expr, expr) = parseStmtList tokenlist_leftbrace [] in
+                        let (tokenlist_stmt_list, stmt_list) = parseStmtList tokenlist_leftbrace in
                         begin
-                        match tokenlist_expr.head with
-                        | Lexer.RightBrace -> (next tokenlist_expr, Ast.Parentheses(expr))
+                        match tokenlist_stmt_list.head with
+                        | Lexer.RightBrace -> (next tokenlist_stmt_list, Ast.Block(stmt_list))
                         | _-> let err_msg = __LOC__ ^ "Syntax Error right brace expected but received" ^ show_token_list tokenlist in
                               raise (Syntax_error err_msg)
                         end
@@ -420,7 +419,7 @@ let parseFdecl tokenlist =
                                 begin
                                 match tokenlist_rparen.head with 
                                 | Lexer.LeftBrace -> let (tokenlist_vdecl_list, vdecl_list) = next tokenlist_rparen |> parseVdeclList  in 
-                                              let (tokenlist_stmt_list, stmt_list) = parseStmtList tokenlist_vdecl_list [] in 
+                                              let (tokenlist_stmt_list, stmt_list) = parseStmtList tokenlist_vdecl_list in 
                                               begin
                                               match tokenlist_stmt_list.head with 
                                               | Lexer.RightBrace -> (next tokenlist_stmt_list, Ast.Funcdecl(formals_opt, vdecl_list, stmt_list))

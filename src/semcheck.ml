@@ -83,8 +83,7 @@ and all_non_void list =
 
 
 
-let rec check_decl dict p = 
-    print_string (show_decl p);
+let rec check_decl st dict p = 
     match p with
     | VDecl {vtyp = typ; vname = id; vvalue = expr} ->
         if in_dict id dict then
@@ -92,22 +91,30 @@ let rec check_decl dict p =
                     ", previously defined as " ^ (show_decl (dict id)) in
                 raise (SEM_error msg)
         else
-            extend_dict id p dict
+            let result = 
+                match !st#find id with
+                | Some entry ->
+                    let _ = check_expr (extend_dict id p dict) (Assign ((SymRefVar entry), expr))
+                        in
+                            extend_dict id p dict
+                | None -> raise (SEM_error ("Can't find this symbol " ^ id))
+            in
+                result
     | FDecl {ftyp = typ; fname = id; formals = fms; fbody = (symtbl, stmtlist)} ->
         if in_dict id dict then
             let msg = "Duplicate function" ^ (string_of_type typ) ^ " " ^ id ^
                     ", previously defined as " ^ (show_decl (dict id)) in
                 raise (SEM_error msg)
         else
-            let formals = check_formals fms in
+            let formals = check_formals symtbl fms in
             let newdict = (extend_dict id p (append_dict formals dict)) in
             let _       = check_fdecl typ id symtbl stmtlist newdict in
                extend_dict id p dict
             
             
 
-and check_formals decls = 
-    List.fold_left check_decl empty_dict decls
+and check_formals st decls = 
+    List.fold_left (check_decl st) empty_dict decls
 
 and check_fdecl typ id symtbl stmtlist dict = 
     let (_, ret) = List.fold_left (check_stmt symtbl) (dict, []) stmtlist in 
@@ -169,7 +176,7 @@ and check_stmt symtbl (dict, ret) stmtlist =
         check_compat Bool typ;
         check_stmt symtbl (dict,ret) stmt
     | DeclStmt decl -> 
-        (check_decl dict (VDecl decl), ret)
+        (check_decl symtbl dict (VDecl decl), ret)
     | Expr e ->
         let _ = check_expr dict e in
             (dict, ret)
@@ -181,27 +188,44 @@ and check_non_void typ =
                 raise (SEM_error msg)
         |  _ -> ()
     
+and merge_type a b =
+    match a, b with
+    | None, None -> None
+    | None, Some c -> Some c
+    | Some c, None -> Some c
+    | Some (Vec a), Some (Vec b) ->
+        let result = 
+            match merge_type (Some a) (Some b) with
+            | Some c -> Some (Vec c) 
+            | None -> None
+        in result
+    | Some c, Some d ->
+        if c == d then
+            Some c
+        else
+            raise (SEM_error ("Incompatible vector type " ^ (string_of_type c) ^ " and " ^ (string_of_type d)))
+
+and get_vec_type list = 
+    List.fold_left merge_type None list
+
 and check_expr dict expr =
     match expr with
     | Literal _ -> Int
     | Number _  -> Float
     | BoolLit _ -> Bool
+    | VecLit [] -> 
+        Vec Void  (* any type is ok, will check in later assignment statement*)
     | VecLit list ->
-        let check_elem = 
-            fun x -> 
-                let typ = check_expr dict x in
-                    check_compat Float typ
-        in
-        let _ = List.map check_elem list in 
-            Vec  
-    | MatLit listlist -> 
-        let check_elem = 
-            fun x -> 
-                let typ = check_expr dict x in
-                    check_compat Float typ
-        in
-        let _ = List.map (List.map check_elem) listlist in
-            Mat
+        let result = 
+            match get_vec_type (List.map (fun x -> Some (check_expr dict x)) list) with
+            | None       -> Vec Void
+            | Some Int   -> Vec Int
+            | Some Float -> Vec Float
+            | Some (Vec Void) -> Mat Void
+            | Some (Vec Int) -> Mat Int
+            | Some (Vec Float) -> Mat Float
+            | Some a -> raise (SEM_error ("Unsupported vector type " ^ (string_of_type a)))
+        in result
     | Binop (l, op, r) ->
         let result = 
             match op with
@@ -264,11 +288,17 @@ and check_expr dict expr =
                 let l = check_expr dict e1 in
                 let r = check_expr dict e2 in
                 let result = 
-                    match l, e2 with
-                    |   (Vec t, VecLit list) ->
-                            l                            
-                    |   (Mat t, MatLit list) ->
-                            l
+                    match l, r with
+                    |   (Vec (Vec a), Mat b) ->
+                            if a == b then
+                                Mat a
+                            else
+                                raise (SEM_error ("Incompatible matrix type " ^ (string_of_type a) ^ " and " ^ (string_of_type b)))
+                    |   (Vec a, Vec b) ->
+                            if a == b then
+                                Vec a
+                            else
+                                raise (SEM_error ("Incompatible vector type " ^ (string_of_type a) ^ " and " ^ (string_of_type b)))
                     | _ ->
                         let _ = check_compat l r in
                             l
@@ -323,6 +353,8 @@ and check_expr dict expr =
             match l with
             | Mat typ ->
                 typ
+            | Vec (Vec typ) ->
+                typ
             | _ ->
                 raise (SEM_error (string_of_type l ^ " can't be doubly subscribed"))
         in 
@@ -332,7 +364,7 @@ and check_expr dict expr =
 let check p =
   match p with
   | Program (decls, st) -> 
-        let _ = List.fold_left check_decl empty_dict decls in
+        let _ = List.fold_left (check_decl st) empty_dict decls in
             p
 
 

@@ -38,47 +38,43 @@ let rec parseFormalList tokenlist =
     | Lexer.Int -> let (tokenlist_typ, typ) = parseTyp tokenlist in
                begin
                match tokenlist_typ.head with 
-               | Lexer.ID identifier -> let (tokenlist_formal_list_prime, formal_list_prime) = parseFormalListPrime tokenlist_typ in 
-                                        (tokenlist_formal_list_prime, Ast.FormalList(typ, identifier, formal_list_prime))
-               | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+               | Lexer.ID identifier -> let (tokenlist_formal_list_prime, formal_list_prime) = next tokenlist_typ |> parseFormalListPrime in 
+                                        (tokenlist_formal_list_prime, (typ, identifier) :: formal_list_prime)
+               | _-> let err_msg = __LOC__ ^ "Syntax Error IN FORMAL LIST" ^ show_token_list tokenlist in
                       raise (Syntax_error err_msg);
                end
     | Lexer.Bool -> let (tokenlist_typ, typ) = parseTyp tokenlist in
                begin
                match tokenlist_typ.head with 
-               | Lexer.ID identifier -> let (tokenlist_formal_list_prime, formal_list_prime) = parseFormalListPrime tokenlist_typ in 
-                                        (tokenlist_formal_list_prime, Ast.FormalList(typ, identifier, formal_list_prime))
-               | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+               | Lexer.ID identifier -> let (tokenlist_formal_list_prime, formal_list_prime) = next tokenlist_typ |> parseFormalListPrime in 
+                                        (tokenlist_formal_list_prime, (typ, identifier) :: formal_list_prime)
+               | _-> let err_msg = __LOC__ ^ "Syntax Error IN FORMAL LIST" ^ show_token_list tokenlist in
                      raise (Syntax_error err_msg)
                 end
     | Lexer.Void -> let (tokenlist_typ, typ) = parseTyp tokenlist in
               begin
                match tokenlist_typ.head with 
-               | Lexer.ID identifier -> let (tokenlist_formal_list_prime, formal_list_prime) = parseFormalListPrime tokenlist_typ in 
-                                        (tokenlist_formal_list_prime, Ast.FormalList(typ, identifier, formal_list_prime))
-               | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+               | Lexer.ID identifier -> let (tokenlist_formal_list_prime, formal_list_prime) = next tokenlist_typ |> parseFormalListPrime in 
+                                        (tokenlist_formal_list_prime, (typ, identifier) :: formal_list_prime)
+               | _-> let err_msg = __LOC__ ^ "Syntax Error IN FORMAL LIST" ^ show_token_list tokenlist in
                      raise (Syntax_error err_msg)
               end
-    | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
+    | _-> let err_msg = __LOC__ ^ "Syntax Error IN FORMAL LIST" ^ show_token_list tokenlist in
           raise (Syntax_error err_msg)
 
 (* Formal_list_prime = “COMMA” formal_list | epsilon*)
 and parseFormalListPrime tokenlist = 
     match tokenlist.head with
     | Lexer.Comma -> let (tokenlist_formal_list, formal_list) = next tokenlist |> parseFormalList in 
-                        (tokenlist_formal_list , Ast.FormalListPrime(formal_list))
-    | Lexer.RightParens -> (tokenlist, Ast.Fempty)
+                        (tokenlist_formal_list , formal_list)
+    | Lexer.RightParens -> (tokenlist, [])
     | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
            raise (Syntax_error err_msg)
 (* formals_opt = formal_list | epsilon *)
 let parseFormalsOpt tokenlist = 
     match tokenlist.head with 
-    | Lexer.Int -> let (tokenlist_formal_list, formal_list) = next tokenlist |> parseFormalList in (tokenlist_formal_list, Ast.FormalsOpt(formal_list))
-    | Lexer.Bool -> let (tokenlist_formal_list, formal_list) = next tokenlist |> parseFormalList in (tokenlist_formal_list, Ast.FormalsOpt(formal_list))
-    | Lexer.Void -> let (tokenlist_formal_list, formal_list) = next tokenlist |> parseFormalList  in (tokenlist_formal_list, Ast.FormalsOpt(formal_list))
-    | Lexer.RightParens -> (tokenlist, Ast.FormalsOptEmpty)
-    | _-> let err_msg = __LOC__ ^ "Syntax Error " ^ show_token_list tokenlist in
-          raise (Syntax_error err_msg)
+    | Lexer.RightParens -> (tokenlist, [])
+    | _-> let (tokenlist_formal_list, formal_list) = parseFormalList tokenlist in (tokenlist_formal_list, formal_list)
 
 (* vdecl = “SEMI” *)
 (* later we can remove this function*)

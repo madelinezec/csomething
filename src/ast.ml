@@ -10,20 +10,7 @@ type identifier = string
 [@@deriving show]
 
 
-type formallistprime =
-    | FormalListPrime of formalList
-    | Fempty
-[@@deriving show]
-
-(* typ “ID” formal_list_prime *)
-and formalList =
-    | FormalList of typ * identifier * formallistprime
-[@@deriving show]
-
-(*formals_opt = formal_list | epsilon *)
-type formalsOpt =
-   | FormalsOpt of formalList
-   | FormalsOptEmpty
+type bind = typ * string
 [@@deriving show]
 
 
@@ -77,7 +64,7 @@ type stmt =
 [@@deriving show]
 
 type functiondeclaration = 
-    | Funcdecl of formalsOpt * variabledeclarationlist * stmt list
+    | Funcdecl of bind list * variabledeclarationlist * stmt list
 [@@deriving show]
 
 

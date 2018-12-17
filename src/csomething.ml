@@ -16,7 +16,7 @@ let _ =
         print_string (Ast.string_of_program ast);
         let st = ref @@ new Symbol.symbol_table None Semantics.show_symbol in
         Semantics.inject_library st;
-        let desugared = Semantics.desugar_program st ast in
+        let desugared = Semcheck.check (Semantics.desugar_program st ast) in
         begin match desugared with
             | Semantics.Program (x, st) ->
                 ignore (List.map print_endline (List.map Semantics.show_decl x));

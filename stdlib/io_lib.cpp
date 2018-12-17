@@ -1,9 +1,12 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
 
-#include "matrix_lib.hpp"
+extern "C" {
+#include "matrix_lib.h"
+}
 
 /* read one integer from stdin */
 

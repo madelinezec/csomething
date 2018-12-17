@@ -11,7 +11,7 @@ let rec string_of_type typ =
     | Mat t -> "matrix of " ^ string_of_type t
     | Float -> "float"
     | Vec t -> "vector of " ^ string_of_type t 
-    | _ -> raise (SEM_error "Unknown type") 
+    | Unknown -> "unknown type"
 
 let wrap_exception a b = 
     try
@@ -221,10 +221,17 @@ and check_expr dict expr =
             | None       -> Vec Void
             | Some Int   -> Vec Int
             | Some Float -> Vec Float
-            | Some (Vec Void) -> Mat Void
-            | Some (Vec Int) -> Mat Int
-            | Some (Vec Float) -> Mat Float
             | Some a -> raise (SEM_error ("Unsupported vector type " ^ (string_of_type a)))
+        in result
+
+    | MatLit list ->
+        let collapsed = List.flatten list in
+        let result = begin match get_vec_type (List.map (fun x -> Some (check_expr dict x)) collapsed) with
+            | None -> Mat Void
+            | Some Int -> Mat Int
+            | Some Float -> Mat Float
+            | Some a -> raise (SEM_error ("Unsupported mat type " ^ (string_of_type a)))
+        end
         in result
     | Binop (l, op, r) ->
         let result = 
@@ -284,12 +291,18 @@ and check_expr dict expr =
     | Assign (e1, e2) ->
         let result = 
             match e1 with
-            | SymRefVar _  -> 
+            | SymRefVar (SymVar sym)  -> 
                 let l = check_expr dict e1 in
                 let r = check_expr dict e2 in
                 let result = 
                     match l, r with
-                    |   (Vec (Vec a), Mat b) ->
+                    |   (Mat Unknown, Mat b) ->
+                            let _ = sym.sv_typ <- Mat b in 
+                            Mat b
+                    |   (Vec Unknown, Vec b) ->
+                            let _ = sym.sv_typ <- Vec b in
+                            Vec b
+                    |   (Mat a, Mat b) ->
                             if a == b then
                                 Mat a
                             else

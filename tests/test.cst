@@ -7,7 +7,10 @@ int fac(int n)
 }
 
 int main() {
+    float[3,3] m1;
+    mat m3 = {{1,2,3}, {4,5,6}};
     int input = get_int();
     int res = fac(input);
     put_int(res);
+    return 0;
 }

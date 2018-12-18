@@ -59,6 +59,7 @@ Mat_f* alloc_mat_float(size_t m, size_t n){
     if(matrix_ptr == NULL)
     	exit(-1);
     matrix_ptr->type = 1;
+    
     matrix_ptr->data = (float**)malloc(m * sizeof(float*));
     if(matrix_ptr->data == NULL){
     	free(matrix_ptr);
@@ -578,4 +579,15 @@ Mat_i* mat_float_to_int(Mat_f* mat){
 }
 
 
+
+Mat_f* mat_copy(Mat_f* mat){
+    Mat_f* mat_copy = alloc_mat_float(mat -> m, mat -> n);
+    int i,j;
+    
+    for(i=0; i<mat -> m; i++)
+        for(j=0; j<mat -> n; j++)
+            mat_copy->data[i][j] = mat->data[i][j];
+        
+    return mat;
+}
 

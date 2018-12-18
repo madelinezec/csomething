@@ -75,7 +75,7 @@ void put_float(float x){
 
 /* print a matrix */
 
-void put_mat(struct matrix_int* m){
+void put_mat(Mat_i* m){
   int rows = m->m;
   int columns = m->n;
   int offset;
@@ -91,12 +91,10 @@ void put_mat(struct matrix_int* m){
   }
 }
 
-void put_mat(struct matrix_float* m){
+void put_mat(Mat_f* m){
   int rows = m->m;
   int columns = m->n;
   int offset;
-  char new_line [] = "\n";
-  char whiteSpace [] = " ";
 
   for(int i = 0; i < rows; i++){
     for(int j = 0; j < columns; j++){
@@ -107,12 +105,13 @@ void put_mat(struct matrix_float* m){
   }
 }
 
-extern "C" void put_mat(Mat *m) {
+extern "C" void put_mat(Mat* m) {
     if (m->type == 0) put_mat((Mat_i*)m);
-    else put_mat((Mat_f*)m); 
+    else put_mat((Mat_f*)m);
 }
+
 /* print a vector */
-void put_vec(struct vector_int* v){
+void put_vec(Vec_i* v){
   int length = v->n;
   char white_space [] = " ";
   for(int j = 0; j < length; j++){
@@ -121,7 +120,7 @@ void put_vec(struct vector_int* v){
   }
 }
 
-void put_vec(struct vector_float* v){
+void put_vec(Vec_f* v){
   int length = v->n;
   char white_space [] = " ";
   for(int j = 0; j < length; j++){

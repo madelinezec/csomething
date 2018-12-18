@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#define STD_ERR 2
 
 /* these two are opaque types.
  * they should be internal to the implementation
@@ -13,6 +13,7 @@
  * the layout of these objects */
 
 /* possible memory layout: 
+<<<<<<< HEAD
  * struct matrix {
  *     size_t m, n;
  *     int type; // 0 = int, 1 = float, 2 = double, etc.
@@ -51,8 +52,11 @@ struct vector_float {
     int type;
     size_t n;
     float* data; // the actual matrix entries on the heap 
-};
-
+ };
+ 
+ 
+ 
+ 
 typedef struct matrix_int Mat_i;
 typedef struct matrix_float Mat_f;
 typedef struct vector_int Vec_i;
@@ -62,6 +66,9 @@ typedef struct vector Vec;
 
 /* allocates an m*n matrix of type int on the heap */
 Mat_i* alloc_mat_int(size_t m, size_t n);
+
+
+/* allocates an m*n matrix of type int on the heap */
 
 /* allocate matrix of floats */
 Mat_f* alloc_mat_float(size_t m, size_t n);
@@ -83,6 +90,10 @@ void mat_from_array_int(Mat_i* mat, int* arr, size_t len);
 void mat_from_array_float(Mat_f* mat, float* arr, size_t len);
 void vec_from_array_int(Vec_i* vec, int* arr, size_t len);
 void vec_from_array_float(Vec_f* vec, float* arr, size_t len);
+void free_matrix(Mat_f* mat);
+
+void free_vector(Vec_f* v);
+
 /* fill the matrix m with entries from one-dimensional array "data" 
 void fill_mat_int(struct matrix *m, int *data);
 
@@ -138,4 +149,6 @@ Mat_f* mat_product_float(Mat_f* mat_1, Mat_f* mat_2);
 /* Matrix type cast*/
 Mat_f* mat_int_to_float(Mat_i* mat);
 Mat_i* mat_float_to_int(Mat_f* mat);
+Mat_f* mat_copy(Mat_f* mat);
+
 #endif

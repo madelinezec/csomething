@@ -223,8 +223,16 @@ and codegen_special_binop builder st (expr1, op, expr2) =
             | Ast.Add -> "add_mat_mat"
             | Ast.Mult -> "mat_product"
             | _ -> raise Unimplemented
+    else if (typ1 == int_t && typ2 == matrix_t) then
+        match op with
+            | Ast.Mult -> "scalar_mul_mat_int"
+            | _ -> raise Unimplemented
+    else if (typ1 == float_t && typ2 == matrix_t) then
+        match op with
+            | Ast.Mult -> "scalar_mul_mat_float"
+            | _ -> raise Unimplemented
     else
-        raise CodegenTODO
+        raise Unimplemented
     in
     L.build_call (get_func st func) [|expr1; expr2|] (get_temp ()) builder
 
@@ -363,6 +371,9 @@ let inject_library st =
         ("get_index_matrix_float", L.function_type (L.pointer_type float_t) [|matrix_t; int_t; int_t|]);
         ("get_index_vec_float", L.function_type (L.pointer_type float_t) [|vector_t; int_t|]);
         ("add_mat_mat", L.function_type matrix_t [|matrix_t; matrix_t|]);
+        ("mat_product", L.function_type matrix_t [|matrix_t; matrix_t|]);
+        ("scalar_mul_mat_int", L.function_type matrix_t [|int_t; matrix_t|]);
+        ("scalar_mul_mat_float", L.function_type matrix_t [|float_t; matrix_t|]);
     ] in
     ignore @@ List.map (fun (n, f) -> inject_one_func st n f) funcs
 

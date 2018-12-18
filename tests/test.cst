@@ -10,5 +10,11 @@ int main() {
     mat m1 = {{1,2,3}, {4,5,6}};
     mat m2 = {{1,1,1}, {1,1,1}};
     put_mat(m1 + m2);
+
+    mat m3 = {{1,2},{3,4}};
+    mat m4 = {{1,0},{0,1}};
+    put_mat(m3 * m4);
+    
+    put_mat(3 * m3 * m4);
     return 0;
 }

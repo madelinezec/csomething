@@ -41,6 +41,7 @@ rule token = parse
 | "void"   { VOID }
 | "float"  { FLOAT }
 | "mat"    { MAT }
+| "vec"    { VEC }
 | "true"   { TRUE }
 | "false"  { FALSE }
 | digit+ as int_num {LITERAL(int_of_string int_num)}

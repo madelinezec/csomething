@@ -231,6 +231,18 @@ and codegen_special_binop builder st (expr1, op, expr2) =
         match op with
             | Ast.Mult -> "scalar_mul_mat_float"
             | _ -> raise Unimplemented
+    else if (typ1 == vector_t && typ2 == vector_t) then
+        match op with
+            | Ast.Add -> "add_vec_vec"
+            | _ -> raise Unimplemented
+    else if (typ1 == int_t && typ2 == vector_t) then
+        match op with
+            | Ast.Mult -> "scalar_mul_vec_int"
+            | _ -> raise Unimplemented
+    else if (typ1 == float_t && typ2 == vector_t) then
+        match op with
+            | Ast.Mult -> "scalar_mul_vec_float"
+            | _ -> raise Unimplemented
     else
         raise Unimplemented
     in
@@ -362,8 +374,8 @@ let inject_library st =
         ("vec_from_array_float", L.function_type void_t [|vector_t; float_ptr_t; int_t|]);
         ("alloc_mat_int", L.function_type matrix_t [|int_t; int_t|]);
         ("alloc_mat_float", L.function_type matrix_t [|int_t; int_t|]);
-        ("alloc_vec_int", L.function_type matrix_t [|int_t|]);
-        ("alloc_vec_float", L.function_type matrix_t [|int_t|]);
+        ("alloc_vec_int", L.function_type vector_t [|int_t|]);
+        ("alloc_vec_float", L.function_type vector_t [|int_t|]);
         ("get_index_matrix", L.function_type (L.pointer_type bool_t) [|matrix_t; int_t; int_t|]);
         ("get_index_vec", L.function_type (L.pointer_type bool_t) [|vector_t; int_t|]);
         ("get_index_matrix_int", L.function_type (L.pointer_type int_t) [|matrix_t; int_t; int_t|]);
@@ -371,9 +383,12 @@ let inject_library st =
         ("get_index_matrix_float", L.function_type (L.pointer_type float_t) [|matrix_t; int_t; int_t|]);
         ("get_index_vec_float", L.function_type (L.pointer_type float_t) [|vector_t; int_t|]);
         ("add_mat_mat", L.function_type matrix_t [|matrix_t; matrix_t|]);
+        ("add_vec_vec", L.function_type vector_t [|vector_t; vector_t|]);
         ("mat_product", L.function_type matrix_t [|matrix_t; matrix_t|]);
         ("scalar_mul_mat_int", L.function_type matrix_t [|int_t; matrix_t|]);
         ("scalar_mul_mat_float", L.function_type matrix_t [|float_t; matrix_t|]);
+        ("scalar_mul_vec_int", L.function_type vector_t [|int_t; vector_t|]);
+        ("scalar_mul_vec_float", L.function_type vector_t [|float_t; vector_t|]);
     ] in
     ignore @@ List.map (fun (n, f) -> inject_one_func st n f) funcs
 

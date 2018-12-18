@@ -113,19 +113,21 @@ extern "C" void put_mat(Mat* m) {
 /* print a vector */
 void put_vec(Vec_i* v){
   int length = v->n;
-  char white_space [] = " ";
   for(int j = 0; j < length; j++){
     put_int(v->data[j]);
-    write(1, white_space, strlen(white_space));
+    printf(" ");
   }
 }
 
 void put_vec(Vec_f* v){
   int length = v->n;
-  char white_space [] = " ";
   for(int j = 0; j < length; j++){
     put_float(v->data[j]);
-    write(1, white_space, strlen(white_space));
+    printf(" ");
   }
 }
 
+extern "C" void put_vec(Vec* v) {
+    if (v->type == 0) put_vec((Vec_i*)v);
+    else put_vec((Vec_f*)v);
+}

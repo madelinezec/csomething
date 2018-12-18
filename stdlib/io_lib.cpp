@@ -19,14 +19,14 @@ extern "C" int64_t get_int(){
         if (p == s || *p != '\n') {
         } else break;
     }
-    printf("You entered: %d\n", n);
+    //printf("You entered: %d\n", n);
     return n;
 
 }
 
 /* write one integer to stdout */
 extern "C" void put_int(int x){
-       printf("i get called here");
+       //printf("i get called here");
       	printf("%d", x);
 
 }
@@ -74,6 +74,7 @@ void put_float(float x){
 }
 
 /* print a matrix */
+
 void put_mat(struct matrix_int* m){
   int rows = m->m;
   int columns = m->n;
@@ -83,11 +84,10 @@ void put_mat(struct matrix_int* m){
 
   for(int i = 0; i < rows; i++){
     for(int j = 0; j < columns; j++){
-      offset = i * columns + j;
-      put_int(*m->data[offset]);
-      write(1, white_space, strlen(white_space));
+      put_int(m->data[i][j]);
+      printf(" ");
     }
-    write(1, new_line, strlen(new_line));
+    printf("\n");
   }
 }
 
@@ -100,14 +100,17 @@ void put_mat(struct matrix_float* m){
 
   for(int i = 0; i < rows; i++){
     for(int j = 0; j < columns; j++){
-      offset = i * columns + j;
-      put_float(*(m->data[offset]));
-      write(1, whiteSpace, strlen(whiteSpace));
+      put_float(m->data[i][j]);
+      printf(" ");
     }  
-    write(1, new_line, strlen(new_line));
+    printf("\n");
   }
 }
 
+extern "C" void put_mat(Mat *m) {
+    if (m->type == 0) put_mat((Mat_i*)m);
+    else put_mat((Mat_f*)m); 
+}
 /* print a vector */
 void put_vec(struct vector_int* v){
   int length = v->n;

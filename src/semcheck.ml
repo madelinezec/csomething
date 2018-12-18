@@ -51,6 +51,8 @@ let rec check_compat a b =
     |   (Int, Float) -> ()
     |   (Float, Float) -> ()
     |   (Bool, Bool) -> ()
+    |   (Mat Unknown, Mat _) -> ()
+    |   (Vec Unknown, Vec _) -> ()
     |  _ -> 
         let msg = "Expect " ^ (string_of_type a) ^ " but got " ^ (string_of_type b) in
             raise (SEM_error msg)
@@ -238,17 +240,31 @@ and check_expr dict expr =
             match op with
             | Ast.Add
             | Ast.Sub
-            | Ast.Mult
-            | Ast.Div ->
+            | Ast.Mult ->
                 let lt = check_expr dict l in
                 let rt = check_expr dict r in
-                    check_compat Float lt;
-                    check_compat Float rt;
                     let result = 
                         match lt, rt with 
                         | (Int, Int) -> Int
-                        | _ -> Float
+                        | (Float, Float) -> Float
+                        | (Mat a, Mat b) -> if a == b then Mat a else raise (SEM_error "incompatible matrix types")
+                        | (Vec a, Vec b) -> if a == b then Vec a else raise (SEM_error "incompatible vector types")
+                        | (Int, Mat Int) -> Mat Int
+                        | (Float, Mat Float) -> Mat Float
+                        | (Int, Vec Int) -> Vec Int
+                        | (Float, Vec Float) -> Vec Float 
+                        | _ -> raise (SEM_error "incompatible types")
                     in result
+            | Ast.Div ->
+                let lt = check_expr dict l in
+                let rt = check_expr dict r in
+                let result = 
+                    match lt, rt with
+                    | (Int, Int) -> Int
+                    | (Float, Float) -> Float
+                    | _ -> raise (SEM_error "incompatible types")
+                in
+                result 
             | Ast.Less
             | Ast.Leq
             | Ast.Greater

@@ -1,8 +1,8 @@
 int main(){
     int i; 
     for(i = 0; i < 5; i = i + 1){
-    print(i)
+    put_int(i);
     }
-    print(17)
+    put_int(17);
     return 0;
 }

@@ -1,8 +1,8 @@
 int main(){
 
     if(true){
-        print(42);
+        put_int(42);
     }
-    print(17);
+    put_int(17);
     return 0;
 }

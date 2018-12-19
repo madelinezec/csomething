@@ -80,7 +80,7 @@ let get_formals_type decls =
 let desugar_for : Ast.stmt -> Ast.stmt = function
     | Ast.For (e1, e2, e3, body) ->
         let loop = Ast.While(e2, Ast.Block (body :: [Ast.Expr e3])) in
-        Ast.While(e1, loop)
+        Ast.Block(Ast.Expr e1 :: [loop])
     | _ -> raise DesugaringBug
 
 

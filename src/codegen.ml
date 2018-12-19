@@ -40,23 +40,33 @@ type llvm_symbols = L.llvalue symbol_table
 
 let symbols : llvm_symbols = new symbol_table None print_val
 
-let int_t = L.i64_type context
-and bool_t = L.i1_type context
-and float_t = L.float_type context
-and double_t = L.double_type context
-and matrix_t = L.pointer_type (L.named_struct_type context "mat")
-and vector_t = L.pointer_type (L.named_struct_type context "vec")
-and void_t = L.void_type context
+let int_t = L.i32_type context
+let bool_t = L.i1_type context
+let float_t = L.float_type context
+let double_t = L.double_type context
+let matrix_t = L.pointer_type (L.named_struct_type context "mat")
+let vector_t = L.pointer_type (L.named_struct_type context "vec")
+let void_t = L.void_type context
+let float_ptr_t = L.pointer_type float_t
+let int_ptr_t = L.pointer_type int_t
 
+exception CodeGenNoFunc
 exception CannotGetType of expr
+exception TryToGenUnknown
+
+let get_func st name = match !st#find name with
+    | Some x -> x
+    | None -> raise CodeGenNoFunc
+
 
 let get_type = function
     | Int -> int_t
     | Bool -> bool_t
     | Void -> void_t
-    | Mat -> matrix_t
+    | Mat _ -> matrix_t
     | Float -> float_t
-    | Vec -> vector_t
+    | Vec _ -> vector_t
+    | Unknown -> raise TryToGenUnknown 
 
 let rec get_const_element_type = function
     | Literal _ -> int_t
@@ -82,6 +92,47 @@ let rec codegen_const = function
     | x -> raise (NotAConst x)
 
 
+let get_matlit_dim = function
+    | MatLit ((r :: _) as c) -> (List.length c, List.length r)
+    | _ -> raise CodegenBug
+
+let get_vec_dim = function
+    | VecLit c -> List.length c
+    | _ -> raise CodegenBug
+
+let codegen_lit_alloc lit builder st =
+    let arr = codegen_const lit in
+    let loc = L.build_alloca (L.type_of arr) (get_temp ()) builder in
+    let _ = L.build_store arr loc builder in
+
+    let ptr = L.build_bitcast loc (L.pointer_type (L.element_type (L.type_of arr))) (get_temp ()) builder in
+    let size = L.array_length (L.type_of arr) in
+    let size_arg = L.const_int int_t size in
+    
+    match lit with
+        | MatLit _ ->
+            let m, n = get_matlit_dim lit in
+            if L.element_type (L.type_of ptr) == int_t then
+                let var = L.build_call (get_func st "alloc_mat_int") [|L.const_int int_t m; L.const_int int_t n|] (get_temp ()) builder in
+                let _ = L.build_call (get_func st "mat_from_array_int") [|var; ptr; size_arg|] "" builder in 
+                var
+            else 
+                let var = L.build_call (get_func st "alloc_mat_float") [|L.const_int int_t m; L.const_int int_t n|] (get_temp ()) builder in
+                let _ = L.build_call (get_func st "mat_from_array_float") [|var; ptr; size_arg|] "" builder in
+                var
+        | VecLit _ ->
+            let n = get_vec_dim lit in
+            if L.element_type (L.type_of ptr) == int_t then
+                let var = L.build_call (get_func st "alloc_vec_int") [|L.const_int int_t n|] (get_temp ()) builder in
+                let _ = L.build_call (get_func st "vec_from_array_int") [|var; ptr; size_arg|] "" builder in
+                var
+            else 
+                let var = L.build_call (get_func st "alloc_vec_float") [|L.const_int int_t n|] (get_temp ()) builder in
+                let _ = L.build_call (get_func st "vec_from_array_float") [|var; ptr; size_arg|] "" builder in
+                var
+        | _ -> raise CodegenBug
+     
+
 let codegen_allocate_var builder old_st new_st =
     let allocate_one _ = begin function
         | SymVar {sv_name = name; sv_typ = typ; sv_is_func_arg = is_func_arg } ->
@@ -94,22 +145,29 @@ let codegen_allocate_var builder old_st new_st =
     end in
     !old_st#map_curr_level allocate_one
 
-let codegen_ptr builder st : expr -> L.llvalue = function
+let rec codegen_ptr builder st : expr -> L.llvalue = function
     | SymRefVar (SymVar {sv_name = name }) ->
         begin match !st#find name with
                 | None -> raise (CodegenUndefinedVar name)
                 | Some v -> v
         end
-    | SingleIndex (v, i) -> raise CodegenTODO
-    | DoubleIndex (v, i, j) -> raise CodegenTODO
+    | SingleIndex (v, i) ->
+        let vec = codegen_expr builder st v in
+        let i_arg = codegen_expr builder st i in
+        L.build_call (get_func st "get_index_vec") [|vec; i_arg|] (get_temp ()) builder
+    | DoubleIndex (v, i, j) ->
+        let mat = codegen_expr builder st v in
+        let i_arg = codegen_expr builder st i in
+        let j_arg = codegen_expr builder st j in
+        L.build_call (get_func st "get_index_matrix") [|mat; i_arg; j_arg|] (get_temp()) builder
     | _ -> raise CodegenBug
 
-let rec codegen_expr builder st : expr -> L.llvalue = function
+and codegen_expr builder st : expr -> L.llvalue = function
     | Literal _ as c -> codegen_const c
     | Number _ as c -> codegen_const c
     | BoolLit _ as c -> codegen_const c
-    | VecLit _ as c -> codegen_const c
-    | MatLit _ as c -> codegen_const c
+    | VecLit _ as c -> codegen_lit_alloc c builder st
+    | MatLit _ as c -> codegen_lit_alloc c builder st
     | Binop _ as b -> codegen_binop builder st b
     | Unop _ as u -> codegen_unop builder st u 
     | Assign _ as a -> codegen_assign builder st a 
@@ -128,27 +186,93 @@ let rec codegen_expr builder st : expr -> L.llvalue = function
             | _ -> get_temp ()
         end in
         L.build_call func ll_args temp_name builder
+    | SingleIndex (v, i) ->
+        let func = match v with
+            | SymRefVar (SymVar {sv_typ = typ}) ->
+                if (typ == Vec Int) then "get_index_vec_int"
+                else "get_index_vec_float"
+            | _ -> raise CodegenBug
+        in
+        let vec = codegen_expr builder st v in
+        let i_arg = codegen_expr builder st i in
+        let loc = L.build_call (get_func st func) [|vec; i_arg|] (get_temp()) builder in
+        L.build_load loc (get_temp()) builder
+    | DoubleIndex (v, i, j) ->
+        let func = match v with
+            | SymRefVar (SymVar {sv_typ = typ}) -> begin match typ with 
+                | Mat Int -> "get_index_matrix_int"
+                | Mat Float -> "get_index_matrix_float"
+                | Mat Unknown -> raise CodegenBug
+                | _ -> raise CodegenBug
+            end
+            | _ -> raise CodegenBug
+        in
+        let mat = codegen_expr builder st v in
+        let i_arg = codegen_expr builder st i in
+        let j_arg = codegen_expr builder st j in
+        let loc = L.build_call (get_func st func) [|mat; i_arg; j_arg|] (get_temp()) builder in
+        L.build_load loc (get_temp()) builder
+
     | _ -> raise CodegenTODO
 
+and codegen_special_binop builder st (expr1, op, expr2) = 
+    let typ1 = L.type_of expr1 in
+    let typ2 = L.type_of expr2 in
+    let func = if (typ1 == matrix_t && typ2 == matrix_t) then
+        match op with
+            | Ast.Add -> "add_mat_mat"
+            | Ast.Mult -> "mat_product"
+            | _ -> raise Unimplemented
+    else if (typ1 == int_t && typ2 == matrix_t) then
+        match op with
+            | Ast.Mult -> "scalar_mul_mat_int"
+            | _ -> raise Unimplemented
+    else if (typ1 == float_t && typ2 == matrix_t) then
+        match op with
+            | Ast.Mult -> "scalar_mul_mat_float"
+            | _ -> raise Unimplemented
+    else if (typ1 == vector_t && typ2 == vector_t) then
+        match op with
+            | Ast.Add -> "add_vec_vec"
+            | _ -> raise Unimplemented
+    else if (typ1 == int_t && typ2 == vector_t) then
+        match op with
+            | Ast.Mult -> "scalar_mul_vec_int"
+            | _ -> raise Unimplemented
+    else if (typ1 == float_t && typ2 == vector_t) then
+        match op with
+            | Ast.Mult -> "scalar_mul_vec_float"
+            | _ -> raise Unimplemented
+    else
+        raise Unimplemented
+    in
+    L.build_call (get_func st func) [|expr1; expr2|] (get_temp ()) builder
+
 and codegen_binop builder st = function
-    | Binop (expr1, op, expr2) -> 
+    | Binop (expr1, op, expr2) ->
        let expr1' = codegen_expr builder st expr1
        and expr2' = codegen_expr builder st expr2 in 
-       (match op with
-       | Ast.Add -> L.build_add
-       | Ast.Sub -> L.build_sub
-       | Ast.Mult -> L.build_mul
-       | Ast.Div -> L.build_sdiv
-       | Ast.Equal -> L.build_icmp L.Icmp.Eq
-       | Ast.Neq -> L.build_icmp L.Icmp.Ne
-       | Ast.Less -> L.build_icmp L.Icmp.Slt
-       | Ast.Leq -> L.build_icmp L.Icmp.Sle
-       | Ast.Greater -> L.build_icmp L.Icmp.Sgt
-       | Ast.Geq -> L.build_icmp L.Icmp.Sge
-       | Ast.And -> L.build_and 
-       | Ast.Or -> L.build_or
-       ) expr1' expr2' (get_temp ()) builder
+       let typ1 = L.type_of expr1' in
+       let typ2 = L.type_of expr2' in
+       if typ1 == matrix_t || typ1 == vector_t || typ2 == matrix_t || typ2 == vector_t then
+           codegen_special_binop builder st (expr1', op, expr2')
+       else
+           (match op with
+           | Ast.Add -> L.build_add
+           | Ast.Sub -> L.build_sub
+           | Ast.Mult -> L.build_mul
+           | Ast.Div -> L.build_sdiv
+           | Ast.Equal -> L.build_icmp L.Icmp.Eq
+           | Ast.Neq -> L.build_icmp L.Icmp.Ne
+           | Ast.Less -> L.build_icmp L.Icmp.Slt
+           | Ast.Leq -> L.build_icmp L.Icmp.Sle
+           | Ast.Greater -> L.build_icmp L.Icmp.Sgt
+           | Ast.Geq -> L.build_icmp L.Icmp.Sge
+           | Ast.And -> L.build_and 
+           | Ast.Or -> L.build_or
+           ) expr1' expr2' (get_temp ()) builder
     | _ -> raise CodegenBug
+
 and codegen_unop builder st = function
     | Unop(op, expr1) -> let expr1' = codegen_expr builder st expr1 in
         (match op with
@@ -160,7 +284,10 @@ and codegen_assign builder st = function
     | Assign (e1, e2) ->
         let var = codegen_ptr builder st e1 in
         let rhs = codegen_expr builder st e2 in
-        L.build_store rhs var builder
+
+        let var_cast = L.build_bitcast var (L.pointer_type (L.type_of rhs)) (get_temp ()) builder in
+        L.build_store rhs var_cast builder
+
     | _ -> raise CodegenBug
 
 let rec codegen_stmt builder st = function
@@ -235,6 +362,38 @@ let codegen_declare_func st name rtyp args =
         let sym = L.declare_function name func_typ the_module in
         !st#add name sym
 
+let inject_one_func st name func_typ =
+    let sym = L.declare_function name func_typ the_module in
+    !st#add name sym
+
+let inject_library st = 
+    let funcs = [
+        ("mat_from_array_int", L.function_type void_t [|matrix_t; int_ptr_t; int_t|]);
+        ("mat_from_array_float", L.function_type void_t [|matrix_t; float_ptr_t; int_t|]);
+        ("vec_from_array_int", L.function_type void_t [|vector_t; int_ptr_t; int_t|]);
+        ("vec_from_array_float", L.function_type void_t [|vector_t; float_ptr_t; int_t|]);
+        ("alloc_mat_int", L.function_type matrix_t [|int_t; int_t|]);
+        ("alloc_mat_float", L.function_type matrix_t [|int_t; int_t|]);
+        ("alloc_vec_int", L.function_type vector_t [|int_t|]);
+        ("alloc_vec_float", L.function_type vector_t [|int_t|]);
+        ("get_index_matrix", L.function_type (L.pointer_type bool_t) [|matrix_t; int_t; int_t|]);
+        ("get_index_vec", L.function_type (L.pointer_type bool_t) [|vector_t; int_t|]);
+        ("get_index_matrix_int", L.function_type (L.pointer_type int_t) [|matrix_t; int_t; int_t|]);
+        ("get_index_vec_int", L.function_type (L.pointer_type int_t) [|vector_t; int_t|]);
+        ("get_index_matrix_float", L.function_type (L.pointer_type float_t) [|matrix_t; int_t; int_t|]);
+        ("get_index_vec_float", L.function_type (L.pointer_type float_t) [|vector_t; int_t|]);
+        ("add_mat_mat", L.function_type matrix_t [|matrix_t; matrix_t|]);
+        ("add_vec_vec", L.function_type vector_t [|vector_t; vector_t|]);
+        ("mat_product", L.function_type matrix_t [|matrix_t; matrix_t|]);
+        ("scalar_mul_mat_int", L.function_type matrix_t [|int_t; matrix_t|]);
+        ("scalar_mul_mat_float", L.function_type matrix_t [|float_t; matrix_t|]);
+        ("scalar_mul_vec_int", L.function_type vector_t [|int_t; vector_t|]);
+        ("scalar_mul_vec_float", L.function_type vector_t [|float_t; vector_t|]);
+    ] in
+    ignore @@ List.map (fun (n, f) -> inject_one_func st n f) funcs
+
+
+
 let codegen_global_decl st = function
     | VDecl {vtyp = vtyp; vname = vname; vvalue = vvalue} ->
         let init = codegen_const vvalue in
@@ -272,6 +431,7 @@ let codegen_program = function
     Program (ds, old_st) -> 
         let st = ref @@ new symbol_table None print_val in
         codegen_global_func_forward old_st st;
+        inject_library st;
         ignore @@ List.map (codegen_global_decl st) ds;
         print_endline (L.string_of_llmodule the_module);
         L.print_module "out.s" the_module;

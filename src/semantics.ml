@@ -1,12 +1,12 @@
 open Symbol
 
 type typ = 
-    | Int | Bool | Void | Mat | Float | Vec
+    | Int | Bool | Void | Mat of typ | Float | Vec of typ | Unknown
     [@@deriving show]
 
 type symbol =
-    | SymVar of {sv_name : string; sv_typ : typ; sv_is_temp : bool; sv_is_func_arg : bool; sv_is_global : bool; mutable sv_ref : int }
-    | SymFun of {sf_name : string; sf_rtyp : typ; sf_args : typ list; mutable sf_ref : int; sf_is_forward : bool}
+    | SymVar of {sv_name : string; mutable sv_typ : typ; sv_is_temp : bool; sv_is_func_arg : bool; sv_is_global : bool; mutable sv_ref : int }
+    | SymFun of {sf_name : string; mutable sf_rtyp : typ; sf_args : typ list; mutable sf_ref : int; sf_is_forward : bool}
     [@@deriving show]
 
 type op = Ast.op
@@ -69,6 +69,7 @@ exception DesugaringBug
 exception UnknownIdentifier of string
 exception FunctionNameAsId of string
 exception CallingAnId of string
+exception IllformedMatLit
 
 let get_formals_type decls =
     let get_decl_type = function
@@ -83,15 +84,26 @@ let desugar_for : Ast.stmt -> Ast.stmt = function
     | _ -> raise DesugaringBug
 
 
-let desugar_typ : Ast.typ -> typ = function
+let rec desugar_typ : Ast.typ -> typ = function
     | Ast.Int -> Int
     | Ast.Bool -> Bool
     | Ast.Void -> Void
-    | Ast.Mat -> Mat
-    | Ast.Vec -> Vec
+    | Ast.Mat -> Mat Unknown 
+    | Ast.Vec -> Vec Unknown
     | Ast.Float -> Float
-    | Ast.RealVec _ -> Vec
-    | Ast.RealMat _ -> Mat
+    | Ast.RealVec (t, _) -> Vec (desugar_typ t)
+    | Ast.RealMat (t, _, _) -> Mat (desugar_typ t)
+
+
+
+let rec collapse_veclit : expr -> expr = function
+    | VecLit [] -> MatLit []
+    | VecLit ((VecLit xs) :: vs) ->
+        begin match collapse_veclit (VecLit vs) with
+            | MatLit ys -> MatLit (xs :: ys)
+            | _ -> raise IllformedMatLit 
+        end
+    | x -> x
 
 let rec desugar_expr (st : symbol symbol_table ref) = function
     | Ast.Literal x -> Literal x
@@ -115,7 +127,7 @@ let rec desugar_expr (st : symbol symbol_table ref) = function
         end in
         Call(sym, List.map (desugar_expr st) li)
     | Ast.Noexpr -> Noexpr
-    | Ast.VecLit xs -> VecLit (List.map (desugar_expr st) xs)
+    | Ast.VecLit xs -> collapse_veclit (VecLit (List.map (desugar_expr st) xs))
     | Ast.MatLit xs -> MatLit (List.map (function x -> List.map (desugar_expr st) x) xs) 
     | Ast.SingleIndex (v, i) -> SingleIndex ((desugar_expr st v), (desugar_expr st i))
     | Ast.DoubleIndex (v, i, j)
@@ -195,6 +207,8 @@ let rec desugar_program (st: symbol symbol_table ref) : Ast.program -> desugared
 let inject_library st =
     let lib_funcs = [
         SymFun {sf_name = "put_int"; sf_rtyp = Void; sf_args = [Int]; sf_is_forward = true; sf_ref = 0};
-        SymFun {sf_name = "get_int"; sf_rtyp = Int; sf_args = []; sf_is_forward = true; sf_ref = 0}
+        SymFun {sf_name = "get_int"; sf_rtyp = Int; sf_args = []; sf_is_forward = true; sf_ref = 0};
+        SymFun {sf_name = "put_mat"; sf_rtyp = Void; sf_args = [Mat Unknown]; sf_is_forward = true; sf_ref = 0}; 
+        SymFun {sf_name = "put_vec"; sf_rtyp = Void; sf_args = [Vec Unknown]; sf_is_forward = true; sf_ref = 0} 
     ] in
     ignore @@ List.map (function SymFun s as sym -> !st#add s.sf_name sym | SymVar _ -> raise DesugaringBug) lib_funcs

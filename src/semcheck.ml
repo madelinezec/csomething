@@ -51,6 +51,7 @@ let rec check_compat a b =
     |   (Int, Float) -> ()
     |   (Float, Float) -> ()
     |   (Bool, Bool) -> ()
+    |   (Int, Bool) -> ()
     |   (Mat Unknown, Mat _) -> ()
     |   (Vec Unknown, Vec _) -> ()
     |  _ -> 
@@ -169,13 +170,13 @@ and check_stmt symtbl (dict, ret) stmtlist =
             (dict, newret)
     | If (cond, t, f) ->
         let typ = check_expr dict cond in
-            check_compat Bool typ;
+            check_compat Int typ;
             let (_, ret1) = check_stmt symtbl (dict, ret) t in 
             let (_, ret2) = check_stmt symtbl (dict, ret1) f in
             (dict, ret2)
     | While(cond, stmt) ->
         let typ = check_expr dict cond in
-        check_compat Bool typ;
+        check_compat Int typ;
         check_stmt symtbl (dict,ret) stmt
     | DeclStmt decl -> 
         (check_decl symtbl dict (VDecl decl), ret)

@@ -1,0 +1,13 @@
+int foo(int x, int y){
+    return 0;
+}
+
+int main(){
+
+    int i; 
+    i = 100;
+    foo(i = 2, i = 1 + i);
+    print(i);
+    return 0;
+
+}

@@ -177,4 +177,13 @@ Mat_i* mat_copy_int(Mat_i* mat);
 Vec_i* vec_copy_int(Vec_i* mat);
 Vec_f* vec_copy_float(Vec_f* mat);
 
+//mat inverse
+Mat_f* mat_inverse_float(Mat_f* mat);
+Mat_f* mat_inverse_int(Mat_i* mat);
+Mat* mat_inv(Mat* m);
+//mat inverse helper
+void matrix_inversion_helper(float** , int, float** );
+int GetMinor(float **src, float **, int, int, int);
+float CalcDeterminant( float **, int);
+
 #endif

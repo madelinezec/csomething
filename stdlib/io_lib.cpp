@@ -19,14 +19,12 @@ extern "C" int64_t get_int(){
         if (p == s || *p != '\n') {
         } else break;
     }
-    //printf("You entered: %d\n", n);
     return n;
 
 }
 
 /* write one integer to stdout */
 extern "C" void put_int(int x){
-       //printf("i get called here");
       	printf("%d", x);
 
 }

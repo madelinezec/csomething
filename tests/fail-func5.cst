@@ -1,0 +1,5 @@
+int foo(){} /* must return a value */
+
+int main(){
+    return 0
+}

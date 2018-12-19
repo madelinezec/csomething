@@ -1,0 +1,2 @@
+error near line 14 character 1Fatal error: exception Semcheck.SEM_error("In function call\nExpect bool but got int")
+Raised by primitive operation at file "parsing.ml", line 164, characters 4-28

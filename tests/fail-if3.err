@@ -1,0 +1,5 @@
+error near line 8 character 9Fatal error: exception Parsing.Parse_error
+Raised at file "parsing.ml", line 138, characters 8-25
+Called from file "parsing.ml", line 164, characters 4-28
+Re-raised at file "parsing.ml", line 183, characters 8-17
+Called from file "src/parser.ml", line 957, characters 4-44

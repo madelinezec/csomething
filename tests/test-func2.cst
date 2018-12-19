@@ -5,8 +5,9 @@ int foo(int x, int y){
 int main(){
 
     int i; 
-    i = 100;
-    foo(i = 2, i = 1 + i);
+    i = 2;
+    int j = i + 1;
+    foo(i, j);
     put_int(i);
     return 0;
 

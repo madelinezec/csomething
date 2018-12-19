@@ -1,0 +1,2 @@
+error near line 15 character 1Fatal error: exception Semantics.UnknownIdentifier("foo")
+Raised by primitive operation at file "parsing.ml", line 164, characters 4-28

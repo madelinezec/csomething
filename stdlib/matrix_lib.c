@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <omp.h>
 #include "matrix_lib.h"
 
 #define STD_ERR 2
@@ -352,9 +353,13 @@ Mat_i* minus_mat_mat_int(Mat_i* mat_1, Mat_i* mat_2){
     Mat_i* pt = alloc_mat_int(num_rows, num_columns);
 
     int i,j;
+    #pragma omp parallel private(i,j)
+    {
+    #pragma omp for 
     for(i = 0; i < num_rows; i++)
     	for(j = 0; j < num_columns; j++)
     		pt->data[i][j] = mat_1->data[i][j] - mat_2->data[i][j];
+    }
     
     return pt;
 }
@@ -371,9 +376,13 @@ Mat_f* minus_mat_mat_float(Mat_f* mat_1, Mat_f* mat_2){
     Mat_f* pt = alloc_mat_float(num_rows, num_columns);
 
     int i,j;
+    #pragma omp parallel private(i,j)
+    {
+    #pragma omp for 
     for(i = 0; i < num_rows; i++)
     	for(j = 0; j < num_columns; j++)
     		pt->data[i][j] = mat_1->data[i][j] - mat_2->data[i][j];
+    }
     
     return pt;
 }
@@ -393,9 +402,13 @@ Mat_i* add_mat_mat_int(Mat_i* mat_1, Mat_i* mat_2){
     Mat_i* pt = alloc_mat_int(num_rows, num_columns);
 
     int i,j;
+    #pragma omp parallel private(i,j)
+    {
+    #pragma omp for 
     for(i = 0; i < num_rows; i++)
     	for(j = 0; j < num_columns; j++)
     		pt->data[i][j] = mat_1->data[i][j] + mat_2->data[i][j];
+    }
     
     return pt;
     		
@@ -413,9 +426,13 @@ Mat_f* add_mat_mat_float(Mat_f* mat_1, Mat_f* mat_2){
     Mat_f* pt = alloc_mat_float(num_rows, num_columns);
 
     int i,j;
+    #pragma omp parallel private(i,j)
+    {
+    #pragma omp for 
     for(i = 0; i < num_rows; i++)
     	for(j = 0; j < num_columns; j++)
     		pt->data[i][j] = mat_1->data[i][j] + mat_2->data[i][j];
+    }
     
     return pt;
 }
@@ -471,8 +488,12 @@ Vec_i* minus_vec_vec_int(Vec_i* vec_1, Vec_i* vec_2){
     Vec_i* pt = alloc_vec_int(vec_1->n);
     
     int i;
+    #pragma omp parallel private(i)
+    {
+    #pragma omp for 
     for(i = 0; i < vec_1->n; i++)
     	pt->data[i] = vec_1->data[i] - vec_2->data[i];
+    }
     return pt;
 }
 
@@ -486,8 +507,12 @@ Vec_f* minus_vec_vec_float(Vec_f* vec_1, Vec_f* vec_2){
     Vec_f* pt = alloc_vec_float(vec_1->n);
     
     int i;
+    #pragma omp parallel private(i)
+    {
+    #pragma omp for 
     for(i = 0; i < vec_1->n; i++)
     	pt->data[i] = vec_1->data[i] - vec_2->data[i];
+    }
     return pt;
 }
 
@@ -502,8 +527,12 @@ Vec_i* add_vec_vec_int(Vec_i* vec_1, Vec_i* vec_2){
     Vec_i* pt = alloc_vec_int(vec_1->n);
     
     int i;
+    #pragma omp parallel private(i)
+    {
+    #pragma omp for 
     for(i = 0; i < vec_1->n; i++)
     	pt->data[i] = vec_1->data[i] + vec_2->data[i];
+    }
     return pt;
 }
 
@@ -516,8 +545,13 @@ Vec_f* add_vec_vec_float(Vec_f* vec_1, Vec_f* vec_2){
     Vec_f* pt = alloc_vec_float(vec_1->n);
     
     int i;
+    
+    #pragma omp parallel private(i)
+    {
+    #pragma omp for 
     for(i = 0; i < vec_1->n; i++)
     	pt->data[i] = vec_1->data[i] + vec_2->data[i];
+    }
     return pt;
 }
 
@@ -613,10 +647,15 @@ Mat_i* mat_product_int(Mat_i* mat_1, Mat_i* mat_2){
     Mat_i* pt = alloc_mat_int(m, n);
     //mult
     int i,j,k;
+    
+    #pragma omp parallel private(i,j,k)
+    {
+    #pragma omp for 
     for(i=0; i<m; i++)
         for(j=0; j<n; j++)
             for(k=0; k < mat_1->n; k++)
                 pt->data[i][j] += mat_1->data[i][k] * mat_2->data[k][j];
+    }
     return pt;
 }
 
@@ -644,10 +683,14 @@ Mat_f* mat_product_float(Mat_f* mat_1, Mat_f* mat_2){
     Mat_f* pt = alloc_mat_float(m, n);
     //mult
     int i,j,k;
+    #pragma omp parallel private(i,j,k)
+    {
+    #pragma omp for 
     for(i=0; i<m; i++)
         for(j=0; j<n; j++)
             for(k=0; k < mat_1->n; k++)
                 pt->data[i][j] += mat_1->data[i][k] * mat_2->data[k][j];
+    }
     return pt;
 }
 // more operations to follow
@@ -682,9 +725,14 @@ Vec_i* vec_copy_int(Vec_i* mat){
     Vec_i* mat_copy = alloc_vec_int(mat -> n);
     int i;
     
+    #pragma omp parallel private(i)
+    {
+    #pragma omp for 
     for(i=0; i<mat -> n; i++)
             mat_copy->data[i] = mat->data[i];
-        
+    }
+    
+    
     return mat_copy;
 }
 
@@ -692,9 +740,13 @@ Vec_f* vec_copy_float(Vec_f* mat){
     Vec_f* mat_copy = alloc_vec_float(mat -> n);
     int i;
     
+    #pragma omp parallel private(i)
+    {
+    #pragma omp for 
     for(i=0; i<mat -> n; i++)
             mat_copy->data[i] = mat->data[i];
-        
+    }
+    
     return mat_copy;
 }
 
@@ -704,10 +756,14 @@ Mat_i* mat_copy_int(Mat_i* mat){
     Mat_i* mat_copy = alloc_mat_int(mat -> m, mat -> n);
     int i,j;
     
+    
+    #pragma omp parallel private(i,j)
+    {
+    #pragma omp for 
     for(i=0; i<mat -> m; i++)
         for(j=0; j<mat -> n; j++)
             mat_copy->data[i][j] = mat->data[i][j];
-        
+    }
     return mat_copy;
 }
 
@@ -716,9 +772,14 @@ Mat_f* mat_copy_float(Mat_f* mat){
     Mat_f* mat_copy = alloc_mat_float(mat -> m, mat -> n);
     int i,j;
     
+    #pragma omp parallel private(i,j)
+    {
+    #pragma omp for 
     for(i=0; i<mat -> m; i++)
         for(j=0; j<mat -> n; j++)
             mat_copy->data[i][j] = mat->data[i][j];
+    }
+
         
     return mat_copy;
 }

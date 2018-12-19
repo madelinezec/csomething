@@ -1,11 +1,12 @@
 int main(){
 
-if(true){
-print(42);
-}
-else{
-print(8);
-}
-print(17);
-return 1;
+    if(true){
+        put_int(42);
+    }
+    else{
+        put_int(8);
+    }
+    put_int(30);
+
+    return 1;
 }

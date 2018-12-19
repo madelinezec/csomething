@@ -7,7 +7,7 @@ int main(){
     int i; 
     i = 100;
     foo(i = 2, i = 1 + i);
-    print(i);
+    put_int(i);
     return 0;
 
 }

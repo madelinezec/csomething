@@ -1,7 +1,7 @@
 int testConditional(bool b){
    int x; 
    if (b){
-       x = 42;
+       x = 12;
    }
    else{
        x = 17;
@@ -10,7 +10,7 @@ int testConditional(bool b){
 }
 
 int main(){
-    print(test(Conditional(true));
-    print(test(Conditional(false));
+    put_int(testConditional(true));
+    put_int(testConditional(false));
     return 0;
 }

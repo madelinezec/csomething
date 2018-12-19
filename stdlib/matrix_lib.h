@@ -13,7 +13,6 @@
  * the layout of these objects */
 
 /* possible memory layout: 
-<<<<<<< HEAD
  * struct matrix {
  *     size_t m, n;
  *     int type; // 0 = int, 1 = float, 2 = double, etc.

@@ -1,11 +1,14 @@
 int main(){
 
 if(false){
-print(42);
+    put_int(42);
 }
+
 else{
- x;
+    x; */undeclared variable /*
 }
-print(17);
+
+
+put_int(17);
 return 1;
 }

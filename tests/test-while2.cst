@@ -9,7 +9,7 @@ int func(int x){
 }
 int main(){
     
-    print(func(5));
+    put_int(func(5));
     return 0;
 
 }

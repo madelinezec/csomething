@@ -10,7 +10,7 @@ int testConditional(bool b){
 }
 
 int main(){
-    print(test(Conditional(true));
-    print(test(Conditional(false));
+    put_int(test(Conditional(true));
+    put_int(test(Conditional(false));
     return 0;
 }

@@ -1,8 +1,8 @@
 int main(){
 
-if(false){
-print(42);
-}
-print(17);
-return 1;
+    if(false){
+        put_int(42);
+    }
+    put_int(17);
+    return 1;
 }

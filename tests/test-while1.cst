@@ -8,8 +8,8 @@ int main(){
 	while(i < 10){
 		sum = sum + i;
 		i = i + 1;
-                print(i)
+                put_int(i)
 	}
-        print(17)
+        put_int(17)
 	return 0;
 }

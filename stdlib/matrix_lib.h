@@ -156,6 +156,14 @@ Vec_f* scalar_mul_vec_float(float num, Vec_f* vec);
 Mat_i* mat_product_int(Mat_i* mat_1, Mat_i* mat_2);
 Mat_f* mat_product_float(Mat_f* mat_1, Mat_f* mat_2);
 
+//mat vec product
+Mat* mat_vec_product(Mat* m, Vec* v);
+Mat_i* mat_vec_product_int(Mat_i* mat, Vec_i* vec);
+Mat_f* mat_vec_product_float(Mat_f* mat, Vec_f* vec);
+
+Mat_f* mat_transpose_float(Mat_f* mat);
+Mat_i* mat_transpose_int(Mat_i* mat);
+
 // more operations to follow
 
 /* Matrix type cast*/

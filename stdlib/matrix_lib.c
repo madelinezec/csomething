@@ -784,3 +784,79 @@ Mat_f* mat_copy_float(Mat_f* mat){
     return mat_copy;
 }
 
+
+Mat* mat_transpose(Mat* m) {
+    if (m->type == 1) 
+        return (Mat*)mat_transpose_float((Mat_f*)m);
+    else 
+        return (Mat*)mat_transpose_int((Mat_i*)m);
+}
+
+
+Mat_f* mat_transpose_float(Mat_f* mat){
+    Mat_f* mat_copy = alloc_mat_float(mat -> n, mat -> m);
+    int i,j;
+    
+    #pragma omp parallel private(i,j)
+    {
+    #pragma omp for 
+    for(i=0; i<mat -> m; i++)
+        for(j=0; j<mat -> n; j++)
+            mat_copy->data[j][i] = mat->data[i][j];
+    }
+    return mat_copy;
+}
+
+
+Mat_i* mat_transpose_int(Mat_i* mat){
+    Mat_i* mat_copy = alloc_mat_int(mat -> n, mat -> m);
+    int i,j;
+    
+    #pragma omp parallel private(i,j)
+    {
+    #pragma omp for 
+    for(i=0; i<mat -> m; i++)
+        for(j=0; j<mat -> n; j++)
+            mat_copy->data[j][i] = mat->data[i][j];
+    }
+    return mat_copy;
+}
+
+Mat* mat_vec_product(Mat* m, Vec* v) {
+     if (m->type != v->type) {
+        fprintf(stderr, "Type mismatch: mat_vec_product\n");
+        exit(-1);
+    }
+    if (m->type == 1) 
+        return (Mat*)mat_vec_product_float((Mat_f*)m, (Vec_f*)v);
+    else 
+        return (Mat*)mat_vec_product_int((Mat_i*)m, (Vec_i*)v);
+}
+
+
+
+Mat_i* mat_vec_product_int(Mat_i* mat, Vec_i* vec){
+    Mat_i* mat_copy = alloc_mat_int(vec -> n, 1);
+    int i;
+    for(i=0; i < vec->n; i++)
+        mat_copy->data[i][0] = vec->data[i];
+    
+    Mat_i* r = mat_product_int(mat, mat_copy);
+    free_matrix_int(mat_copy);
+    return r;
+}
+
+Mat_f* mat_vec_product_float(Mat_f* mat, Vec_f* vec){
+    Mat_f* mat_copy = alloc_mat_float(vec -> n, 1);
+    
+    int i;
+    for(i=0; i < vec->n; i++)
+        mat_copy->data[i][0] = vec->data[i];
+    
+    Mat_f* r = mat_product_float(mat, mat_copy);
+    free_matrix_float(mat_copy);
+    return r;
+}
+
+
+

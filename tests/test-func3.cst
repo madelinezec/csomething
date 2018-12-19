@@ -1,0 +1,15 @@
+int sum(int n){
+    if(n != 0){
+        int x = n - 1;
+        return n + sum(x);
+    }
+    else{
+        return n;
+    }
+
+}
+
+int main(){
+    sum(30);
+    return 0;
+}

@@ -1,0 +1,14 @@
+int func(int x){
+    int i;
+    while (x > 0){
+        foo(); /*undefined function */
+    }
+
+    return m;
+}
+int main(){
+    
+    print(func(5));
+    return 0;
+
+}

@@ -1,0 +1,9 @@
+int foo(){
+    int a; 
+    void b; /*illegal void local variable */
+    return 0;
+}
+
+int main(){
+   return 0;
+}

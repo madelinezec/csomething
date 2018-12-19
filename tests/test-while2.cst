@@ -1,0 +1,15 @@
+int func(int x){
+    int i;
+    while (x > 0){
+        j = j + 3; 
+        x = x -1;
+    }
+
+    return m;
+}
+int main(){
+    
+    print(func(5));
+    return 0;
+
+}

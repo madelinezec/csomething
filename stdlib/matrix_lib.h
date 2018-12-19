@@ -13,7 +13,6 @@
  * the layout of these objects */
 
 /* possible memory layout: 
-<<<<<<< HEAD
  * struct matrix {
  *     size_t m, n;
  *     int type; // 0 = int, 1 = float, 2 = double, etc.
@@ -156,6 +155,16 @@ Vec_f* scalar_mul_vec_float(float num, Vec_f* vec);
 Mat_i* mat_product_int(Mat_i* mat_1, Mat_i* mat_2);
 Mat_f* mat_product_float(Mat_f* mat_1, Mat_f* mat_2);
 
+//mat vec product
+Mat* mat_vec_product(Mat* m, Vec* v);
+Mat_i* mat_vec_product_int(Mat_i* mat, Vec_i* vec);
+Mat_f* mat_vec_product_float(Mat_f* mat, Vec_f* vec);
+
+//transpose
+Mat* mat_transpose(Mat* m);
+Mat_f* mat_transpose_float(Mat_f* mat);
+Mat_i* mat_transpose_int(Mat_i* mat);
+
 // more operations to follow
 
 /* Matrix type cast*/
@@ -167,5 +176,14 @@ Mat_f* mat_copy_float(Mat_f* mat);
 Mat_i* mat_copy_int(Mat_i* mat);
 Vec_i* vec_copy_int(Vec_i* mat);
 Vec_f* vec_copy_float(Vec_f* mat);
+
+//mat inverse
+Mat_f* mat_inverse_float(Mat_f* mat);
+Mat_f* mat_inverse_int(Mat_i* mat);
+Mat* mat_inv(Mat* m);
+//mat inverse helper
+void matrix_inversion_helper(float** , int, float** );
+int GetMinor(float **src, float **, int, int, int);
+float CalcDeterminant( float **, int);
 
 #endif

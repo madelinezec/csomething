@@ -1,0 +1,15 @@
+int main(){
+    	
+	int i;
+	int sum;
+	i = 0;
+	sum = 0;
+
+	while(75){ /* only supports boolean */
+		sum = sum + i;
+		i = i + 1;
+                print(i)
+	}
+        print(17)
+	return 0;
+}

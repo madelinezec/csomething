@@ -1,11 +1,11 @@
 int func(int x){
     int i;
     while (x > 0){
-        j = j + 3; 
+        i = i + 3; 
         x = x -1;
     }
 
-    return m;
+    return i;
 }
 int main(){
     

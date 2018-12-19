@@ -290,6 +290,7 @@ and codegen_assign builder st = function
 
     | _ -> raise CodegenBug
 
+
 let rec codegen_stmt builder st = function
     | Block (old_st, stmts) ->
         let new_st = ref @@ new symbol_table (Some st) print_val in
@@ -301,17 +302,22 @@ let rec codegen_stmt builder st = function
         ignore @@ L.build_ret expr builder
     | If (e, s1, s2) -> 
         let cond = codegen_expr builder st e in
-        let zero = L.const_int bool_t 0 in
+        let zero = L.const_int (L.type_of cond) 0 in
         let cond_val = L.build_icmp L.Icmp.Ne cond zero "ifcond" builder in
         let start_bb = L.insertion_block builder in
         let func = L.block_parent start_bb in
         let then_bb = L.append_block context "then" func in
+        let _ = L.move_block_after start_bb then_bb in
         let else_bb = L.append_block context "else" func in
+        let _ = L.move_block_after then_bb else_bb in
         let merge_bb = L.append_block context "ifcont" func in
-        codegen_stmt (L.builder_at_end context then_bb) st s1;
-        ignore @@ L.build_br merge_bb (L.builder_at_end context then_bb);
-        codegen_stmt (L.builder_at_end context else_bb) st s2;
-        ignore @@ L.build_br merge_bb (L.builder_at_end context else_bb);
+        let _ = L.move_block_after else_bb merge_bb in
+        let temp_builder = L.builder_at_end context then_bb in
+        codegen_stmt temp_builder st s1;
+        ignore @@ L.build_br merge_bb temp_builder;
+        let temp_builder = L.builder_at_end context else_bb in
+        codegen_stmt temp_builder st s2;
+        ignore @@ L.build_br merge_bb temp_builder;
         ignore @@ L.build_cond_br cond_val then_bb else_bb (L.builder_at_end context start_bb);
         L.position_at_end merge_bb builder
     | While (e, s) ->

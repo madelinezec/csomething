@@ -4,7 +4,7 @@ int main(){
         put_int(42);
     }
     else{
-        put_int(8)
+        put_int(8);
     }
     put_int(17);
     return 0;

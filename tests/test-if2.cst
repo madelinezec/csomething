@@ -6,7 +6,7 @@ int main(){
     else{
         put_int(8);
     }
-    put_int(17);
+    put_int(30);
 
     return 1;
 }

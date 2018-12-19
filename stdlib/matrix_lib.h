@@ -161,6 +161,8 @@ Mat* mat_vec_product(Mat* m, Vec* v);
 Mat_i* mat_vec_product_int(Mat_i* mat, Vec_i* vec);
 Mat_f* mat_vec_product_float(Mat_f* mat, Vec_f* vec);
 
+//transpose
+Mat* mat_transpose(Mat* m);
 Mat_f* mat_transpose_float(Mat_f* mat);
 Mat_i* mat_transpose_int(Mat_i* mat);
 

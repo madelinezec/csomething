@@ -1,11 +1,9 @@
 PLT FALL 2018
 
 The LLVM toolchain is necessary for the source code to compile, and for the compiler to compile any code.
-
----
+```
 sudo apt install llvm-6.0
----
-
+```
 **Notice: please install ppx_deriving and llvm-ocaml to make the code compile. **
 ```
 opam install ppx_deriving

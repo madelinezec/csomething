@@ -1,0 +1,11 @@
+int main(){
+
+if(false){
+print(42);
+}
+else{
+ x;
+}
+print(17);
+return 1;
+}

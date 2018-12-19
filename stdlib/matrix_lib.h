@@ -133,10 +133,22 @@ float* get_index_vec_float(Vec_f* v, size_t i);
 
 
 /* the following are linear algebra operations */
+Vec* minus_vec_vec(Vec* v1, Vec* v2);
+Vec* add_vec_vec(Vec* v1, Vec* v2);
+Mat* minus_mat_mat(Mat* m1, Mat* m2);
+Mat* add_mat_mat(Mat* m1, Mat* m2);
+
+
 Mat_i* add_mat_mat_int(Mat_i* mat_1, Mat_i* mat_2);
 Mat_f* add_mat_mat_float(Mat_f* mat_1, Mat_f* mat_2);
 Vec_i* add_vec_vec_int(Vec_i* vec_1, Vec_i* vec_2);
 Vec_f* add_vec_vec_float(Vec_f* vec_1, Vec_f* vec_2);
+
+Mat_i* minus_mat_mat_int(Mat_i* mat_1, Mat_i* mat_2);
+Mat_f* minus_mat_mat_float(Mat_f* mat_1, Mat_f* mat_2);
+Vec_i* minus_vec_vec_int(Vec_i* vec_1, Vec_i* vec_2);
+Vec_f* minus_vec_vec_float(Vec_f* vec_1, Vec_f* vec_2);
+
 Mat_i* scalar_mul_mat_int(int num, Mat_i* mat);
 Mat_f* scalar_mul_mat_float(float num, Mat_f* mat);
 Vec_i* scalar_mul_vec_int(int num, Vec_i* vec);
@@ -149,6 +161,11 @@ Mat_f* mat_product_float(Mat_f* mat_1, Mat_f* mat_2);
 /* Matrix type cast*/
 Mat_f* mat_int_to_float(Mat_i* mat);
 Mat_i* mat_float_to_int(Mat_f* mat);
-Mat_f* mat_copy(Mat_f* mat);
+
+//mat & vec deep copy
+Mat_f* mat_copy_float(Mat_f* mat);
+Mat_i* mat_copy_int(Mat_i* mat);
+Vec_i* vec_copy_int(Vec_i* mat);
+Vec_f* vec_copy_float(Vec_f* mat);
 
 #endif

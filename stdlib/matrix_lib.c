@@ -326,6 +326,61 @@ Mat* add_mat_mat(Mat* m1, Mat* m2) {
     }
 }
 
+
+Mat* minus_mat_mat(Mat* m1, Mat* m2) {
+    if (m1->type != m2->type) {
+        fprintf(stderr, "Type mismatch: minus_mat_mat\n");
+        exit(-1);
+    }
+    if (m1->type == 0) {
+        return (Mat*)minus_mat_mat_int((Mat_i*)m1, (Mat_i*)m2);
+    } else {
+        return (Mat*)minus_mat_mat_float((Mat_f*)m1, (Mat_f*)m2); 
+    }
+}
+
+
+Mat_i* minus_mat_mat_int(Mat_i* mat_1, Mat_i* mat_2){
+    void_check((void*) mat_1);
+    void_check((void*) mat_2);
+    
+    mat_add_size_check_int(mat_1, mat_2);
+    
+    int num_rows = mat_1->m; 
+    int num_columns = mat_1->n;
+    
+    Mat_i* pt = alloc_mat_int(num_rows, num_columns);
+
+    int i,j;
+    for(i = 0; i < num_rows; i++)
+    	for(j = 0; j < num_columns; j++)
+    		pt->data[i][j] = mat_1->data[i][j] - mat_2->data[i][j];
+    
+    return pt;
+}
+
+Mat_f* minus_mat_mat_float(Mat_f* mat_1, Mat_f* mat_2){
+    void_check((void*) mat_1);
+    void_check((void*) mat_2);
+    
+    mat_add_size_check_float(mat_1, mat_2);
+    
+    int num_rows = mat_1->m; 
+    int num_columns = mat_1->n;
+    
+    Mat_f* pt = alloc_mat_float(num_rows, num_columns);
+
+    int i,j;
+    for(i = 0; i < num_rows; i++)
+    	for(j = 0; j < num_columns; j++)
+    		pt->data[i][j] = mat_1->data[i][j] - mat_2->data[i][j];
+    
+    return pt;
+}
+
+
+
+
 Mat_i* add_mat_mat_int(Mat_i* mat_1, Mat_i* mat_2){
     void_check((void*) mat_1);
     void_check((void*) mat_2);
@@ -392,6 +447,51 @@ Vec* add_vec_vec(Vec* v1, Vec* v2) {
         return (Vec*)add_vec_vec_float((Vec_f*)v1, (Vec_f*)v2);
     }
 }
+
+
+Vec* minus_vec_vec(Vec* v1, Vec* v2) {
+    if (v1->type != v2->type) {
+        fprintf(stderr, "Type mismatch: minus_mat_mat\n");
+        exit(-1);
+    }
+    if (v1->type == 0) {
+        return (Vec*)minus_vec_vec_int((Vec_i*)v1, (Vec_i*)v2);
+    } else {
+        return (Vec*)minus_vec_vec_float((Vec_f*)v1, (Vec_f*)v2);
+    }
+}
+
+
+Vec_i* minus_vec_vec_int(Vec_i* vec_1, Vec_i* vec_2){
+    void_check((void*) vec_1);
+    void_check((void*) vec_2);
+    
+    vec_add_size_check_int(vec_1, vec_2);
+    
+    Vec_i* pt = alloc_vec_int(vec_1->n);
+    
+    int i;
+    for(i = 0; i < vec_1->n; i++)
+    	pt->data[i] = vec_1->data[i] - vec_2->data[i];
+    return pt;
+}
+
+
+Vec_f* minus_vec_vec_float(Vec_f* vec_1, Vec_f* vec_2){
+    void_check((void*) vec_1);
+    void_check((void*) vec_2);
+    
+    vec_add_size_check_float(vec_1, vec_2);
+    
+    Vec_f* pt = alloc_vec_float(vec_1->n);
+    
+    int i;
+    for(i = 0; i < vec_1->n; i++)
+    	pt->data[i] = vec_1->data[i] - vec_2->data[i];
+    return pt;
+}
+
+
 
 Vec_i* add_vec_vec_int(Vec_i* vec_1, Vec_i* vec_2){
     void_check((void*) vec_1);
@@ -578,9 +678,41 @@ Mat_i* mat_float_to_int(Mat_f* mat){
     return pt;
 }
 
+Vec_i* vec_copy_int(Vec_i* mat){
+    Vec_i* mat_copy = alloc_vec_int(mat -> n);
+    int i;
+    
+    for(i=0; i<mat -> n; i++)
+            mat_copy->data[i] = mat->data[i];
+        
+    return mat_copy;
+}
+
+Vec_f* vec_copy_float(Vec_f* mat){
+    Vec_f* mat_copy = alloc_vec_float(mat -> n);
+    int i;
+    
+    for(i=0; i<mat -> n; i++)
+            mat_copy->data[i] = mat->data[i];
+        
+    return mat_copy;
+}
 
 
-Mat_f* mat_copy(Mat_f* mat){
+
+Mat_i* mat_copy_int(Mat_i* mat){
+    Mat_i* mat_copy = alloc_mat_int(mat -> m, mat -> n);
+    int i,j;
+    
+    for(i=0; i<mat -> m; i++)
+        for(j=0; j<mat -> n; j++)
+            mat_copy->data[i][j] = mat->data[i][j];
+        
+    return mat_copy;
+}
+
+
+Mat_f* mat_copy_float(Mat_f* mat){
     Mat_f* mat_copy = alloc_mat_float(mat -> m, mat -> n);
     int i,j;
     
@@ -588,6 +720,6 @@ Mat_f* mat_copy(Mat_f* mat){
         for(j=0; j<mat -> n; j++)
             mat_copy->data[i][j] = mat->data[i][j];
         
-    return mat;
+    return mat_copy;
 }
 

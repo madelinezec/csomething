@@ -1,0 +1,11 @@
+int main(){
+
+if(true){
+  x; /*undeclared variable */;
+}
+else{
+print(8);
+}
+print(17);
+return 1;
+}

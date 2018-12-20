@@ -8,6 +8,11 @@ sudo apt install llvm-6.0
 ```
 opam install ppx_deriving
 opam install llvm
+eval $(opam config env)
+```
+If you are a mac user, you will need to update your environment by running: 
+```
+eval $(opam config env)
 ```
 
 To compile the main program, please run "make" in the root directory of the project.

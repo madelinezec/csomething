@@ -67,7 +67,7 @@ void put_float(float x){
   fractional = modf(x, &integral);
 
   put_int(integral);
-  write(1, ".", strlen("."));
+  printf(".");
   put_int(fractional);
 }
 

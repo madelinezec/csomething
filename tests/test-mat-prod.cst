@@ -1,0 +1,11 @@
+int main () {
+    mat m = {{2.0,0.0},{0.0,2.0}};
+    mat exp = {{1.0,0.0},{0.0,1.0}};
+    int i;
+
+    for (i = 0; i < 10; i=i+1)
+        exp = exp * m;
+
+    put_mat(exp);
+    return 0;
+}

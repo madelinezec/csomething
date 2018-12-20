@@ -1,0 +1,12 @@
+int main() {
+    mat m1 = {{1,2},{3,4}};
+    mat sum = {{0,0},{0,0}};
+
+    int i;
+    for (i = 0; i < 10; i=i+1) {
+        sum = sum + i * m1;
+    }
+
+    put_mat(sum);
+    return 0;
+}

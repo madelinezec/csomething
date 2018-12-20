@@ -113,6 +113,7 @@ Vec_i* alloc_vec_int(size_t n){
 	if(vector_ptr == NULL){
 		exit(-1);
 	}
+    vector_ptr->type = 0;
 	vector_ptr->data = (int*)malloc(n * sizeof(int));
 	if(vector_ptr->data == NULL){
 		free(vector_ptr);
@@ -128,6 +129,7 @@ Vec_f* alloc_vec_float(size_t n){
 	if(vector_ptr == NULL){
 		exit(-1);
 	}
+    vector_ptr->type = 1;
 	vector_ptr->data = (float*)malloc(n * sizeof(float));
 	if(vector_ptr->data == NULL){
 		free(vector_ptr);
@@ -455,7 +457,7 @@ void vec_add_size_check_float(Vec_f* vec_1, Vec_f* vec_2){
 
 Vec* add_vec_vec(Vec* v1, Vec* v2) {
     if (v1->type != v2->type) {
-        fprintf(stderr, "Type mismatch: add_mat_mat\n");
+        fprintf(stderr, "Type mismatch: add_vec_vec\n");
         exit(-1);
     }
     if (v1->type == 0) {
@@ -468,7 +470,7 @@ Vec* add_vec_vec(Vec* v1, Vec* v2) {
 
 Vec* minus_vec_vec(Vec* v1, Vec* v2) {
     if (v1->type != v2->type) {
-        fprintf(stderr, "Type mismatch: minus_mat_mat\n");
+        fprintf(stderr, "Type mismatch: minus_vec_vec\n");
         exit(-1);
     }
     if (v1->type == 0) {
@@ -995,3 +997,4 @@ float CalcDeterminant( float **mat, int order)
  
     return det;
 }
+

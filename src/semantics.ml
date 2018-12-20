@@ -208,7 +208,11 @@ let inject_library st =
     let lib_funcs = [
         SymFun {sf_name = "put_int"; sf_rtyp = Void; sf_args = [Int]; sf_is_forward = true; sf_ref = 0};
         SymFun {sf_name = "get_int"; sf_rtyp = Int; sf_args = []; sf_is_forward = true; sf_ref = 0};
+        SymFun {sf_name = "put_float"; sf_rtyp = Void; sf_args = [Float]; sf_is_forward = true; sf_ref = 0};
+        SymFun {sf_name = "get_float"; sf_rtyp = Float; sf_args = []; sf_is_forward = true; sf_ref = 0};
         SymFun {sf_name = "put_mat"; sf_rtyp = Void; sf_args = [Mat Unknown]; sf_is_forward = true; sf_ref = 0}; 
-        SymFun {sf_name = "put_vec"; sf_rtyp = Void; sf_args = [Vec Unknown]; sf_is_forward = true; sf_ref = 0} 
+        SymFun {sf_name = "put_vec"; sf_rtyp = Void; sf_args = [Vec Unknown]; sf_is_forward = true; sf_ref = 0};
+        SymFun {sf_name = "mat_inv"; sf_rtyp = Mat Float; sf_args = [Mat Unknown]; sf_is_forward = true; sf_ref = 0};
+        SymFun {sf_name = "mat_transpose"; sf_rtyp = Mat Unknown; sf_args = [Mat Unknown]; sf_is_forward = true; sf_ref = 0};
     ] in
     ignore @@ List.map (function SymFun s as sym -> !st#add s.sf_name sym | SymVar _ -> raise DesugaringBug) lib_funcs

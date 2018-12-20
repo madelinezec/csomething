@@ -213,7 +213,7 @@ and codegen_expr builder st : expr -> L.llvalue = function
         let loc = L.build_call (get_func st func) [|mat; i_arg; j_arg|] (get_temp()) builder in
         L.build_load loc (get_temp()) builder
 
-    | _ -> raise CodegenTODO
+    | _ -> raise CodegenBug
 
 and codegen_special_binop builder st (expr1, op, expr2) = 
     let typ1 = L.type_of expr1 in
@@ -222,6 +222,7 @@ and codegen_special_binop builder st (expr1, op, expr2) =
         match op with
             | Ast.Add -> "add_mat_mat"
             | Ast.Mult -> "mat_product"
+            | Ast.Sub -> "minus_mat_mat"
             | _ -> raise Unimplemented
     else if (typ1 == int_t && typ2 == matrix_t) then
         match op with
@@ -234,6 +235,7 @@ and codegen_special_binop builder st (expr1, op, expr2) =
     else if (typ1 == vector_t && typ2 == vector_t) then
         match op with
             | Ast.Add -> "add_vec_vec"
+            | Ast.Sub -> "minus_vec_vec"
             | _ -> raise Unimplemented
     else if (typ1 == int_t && typ2 == vector_t) then
         match op with
@@ -391,6 +393,8 @@ let inject_library st =
         ("get_index_vec_float", L.function_type (L.pointer_type float_t) [|vector_t; int_t|]);
         ("add_mat_mat", L.function_type matrix_t [|matrix_t; matrix_t|]);
         ("add_vec_vec", L.function_type vector_t [|vector_t; vector_t|]);
+        ("minus_mat_mat", L.function_type matrix_t [|matrix_t; matrix_t|]);
+        ("minus_vec_vec", L.function_type vector_t [|vector_t; vector_t|]);
         ("mat_product", L.function_type matrix_t [|matrix_t; matrix_t|]);
         ("scalar_mul_mat_int", L.function_type matrix_t [|int_t; matrix_t|]);
         ("scalar_mul_mat_float", L.function_type matrix_t [|float_t; matrix_t|]);

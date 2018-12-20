@@ -1,0 +1,9 @@
+int main() {
+    mat m = {{2.0, 1.0}, {0.0, 2.0}};
+    mat in = mat_inv(m);
+    put_mat(in);
+    
+    mat trans = mat_transpose(m);
+    put_mat(trans);
+    return 0;
+}

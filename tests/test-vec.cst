@@ -1,0 +1,10 @@
+int main () {
+    vec v = {1,2,3,4};
+    vec sum = {0,0,0,0};
+    int i;
+    for (i = 0; i < 10; i=i+1)
+        sum = sum + i * v;
+
+    put_vec(sum);
+    return 0;
+}
